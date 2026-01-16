@@ -1,20 +1,20 @@
-/* ==================== INMOBOT AI DESIGN SYSTEM ==================== */
-/* AI-Powered Real Estate Assistant Aesthetic */
+/* ==================== INMOBOT DESIGN SYSTEM ==================== */
+/* Luxury Real Estate Concierge Aesthetic */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Primary Palette - AI Indigo & Purple */
-  --primary: #6366f1;
-  --primary-light: #818cf8;
-  --primary-dark: #4f46e5;
-  --primary-glow: rgba(99, 102, 241, 0.15);
+  /* Primary Palette - Deep Teal & Warm Neutrals */
+  --primary: #0d4f4f;
+  --primary-light: #1a6b6b;
+  --primary-dark: #083838;
+  --primary-glow: rgba(13, 79, 79, 0.15);
 
-  /* Accent - Vibrant Violet */
-  --accent: #8b5cf6;
-  --accent-light: #a78bfa;
-  --accent-dark: #7c3aed;
-  --accent-glow: rgba(139, 92, 246, 0.2);
+  /* Accent - Warm Gold */
+  --accent: #c4a35a;
+  --accent-light: #d4b76e;
+  --accent-dark: #a88b45;
+  --accent-glow: rgba(196, 163, 90, 0.2);
 
   /* Neutrals - Warm Gray Scale */
   --neutral-50: #faf9f7;
@@ -115,7 +115,7 @@
   --space-16: 64px;
 
   /* Typography */
-  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 
   --text-xs: 0.75rem;
@@ -138,9 +138,7 @@
 }
 
 /* ==================== RESET & BASE ==================== */
-*,
-*::before,
-*::after {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -183,12 +181,7 @@ body::before {
 }
 
 /* ==================== TYPOGRAPHY ==================== */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   font-weight: 600;
   line-height: var(--leading-tight);
@@ -196,21 +189,10 @@ h6 {
   color: var(--text-primary);
 }
 
-h1 {
-  font-size: var(--text-4xl);
-}
-
-h2 {
-  font-size: var(--text-3xl);
-}
-
-h3 {
-  font-size: var(--text-2xl);
-}
-
-h4 {
-  font-size: var(--text-xl);
-}
+h1 { font-size: var(--text-4xl); }
+h2 { font-size: var(--text-3xl); }
+h3 { font-size: var(--text-2xl); }
+h4 { font-size: var(--text-xl); }
 
 p {
   line-height: var(--leading-relaxed);
@@ -256,7 +238,7 @@ button {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%);
   opacity: 0;
   transition: opacity var(--duration-fast);
 }
@@ -310,9 +292,7 @@ button {
 }
 
 /* ==================== INPUTS ==================== */
-input,
-textarea,
-select {
+input, textarea, select {
   font-family: inherit;
   font-size: inherit;
 }
@@ -396,7 +376,6 @@ select {
     opacity: 0;
     transform: translateY(8px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -408,7 +387,6 @@ select {
     opacity: 0;
     transform: translateY(16px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -420,7 +398,6 @@ select {
     opacity: 0;
     transform: translateX(-16px);
   }
-
   to {
     opacity: 1;
     transform: translateX(0);
@@ -432,7 +409,6 @@ select {
     opacity: 0;
     transform: translateX(16px);
   }
-
   to {
     opacity: 1;
     transform: translateX(0);
@@ -444,7 +420,6 @@ select {
     opacity: 0;
     transform: scale(0.95);
   }
-
   to {
     opacity: 1;
     transform: scale(1);
@@ -452,50 +427,23 @@ select {
 }
 
 @keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.5;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 @keyframes float {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-4px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 
 @keyframes typing {
-
-  0%,
-  60%,
-  100% {
-    transform: translateY(0);
-  }
-
-  30% {
-    transform: translateY(-4px);
-  }
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
 }
 
 .animate-fade-in {
