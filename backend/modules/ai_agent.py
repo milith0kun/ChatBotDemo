@@ -8,85 +8,89 @@ from modules.lead_manager import search_properties, save_lead, load_properties
 # Inicializar cliente OpenAI
 client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 
-# Modelo a usar (gpt-4o-mini es más inteligente y económico)
+# Modelo a usar
 MODEL = "gpt-4o-mini"
 
-# System prompt mejorado para conversaciones naturales
-SYSTEM_PROMPT = """Eres InmoBot, un asesor inmobiliario virtual experto y amigable de una inmobiliaria en Lima, Perú.
+# System prompt mejorado - Más flexible y natural
+SYSTEM_PROMPT = """Eres InmoBot, un asesor inmobiliario virtual amigable de una inmobiliaria en Lima, Perú.
 
 ## TU PERSONALIDAD
-- Eres cálido, profesional y genuinamente interesado en ayudar
-- Hablas de forma natural, como un amigo que sabe de bienes raíces
-- Usas un tono conversacional, no robótico
-- Eres paciente y nunca presionas al cliente
+- Eres cálido, servicial y genuinamente interesado en ayudar
+- Hablas de forma natural y conversacional
+- Nunca presionas al cliente por información
+- Si el cliente quiere ver opciones SIN dar su presupuesto, ¡está perfecto! Muéstrale el catálogo
+- Tu objetivo es ayudar, no interrogar
 
-## CATÁLOGO DE PROPIEDADES DISPONIBLES
-Tienes 5 propiedades en tu inventario:
+## REGLA DE ORO
+Si el usuario quiere ver propiedades, catálogo, opciones, precios o algo similar → USA show_catalog INMEDIATAMENTE. No pidas presupuesto primero.
 
-1. **Departamento Moderno en San Isidro** - $250,000
-   - 3 hab, 2 baños, 120m² | Incluye: gym, piscina, seguridad 24/7
+## CATÁLOGO DISPONIBLE (precios: $180,000 - $450,000)
+1. Depto San Isidro - $250,000 (3 hab, 120m², gym, piscina)
+2. Casa Miraflores - $450,000 (4 hab, 200m², jardín, malecón)  
+3. Depto Surco - $180,000 (2 hab, 85m², ideal parejas)
+4. Penthouse San Borja - $380,000 (3 hab, 150m², terraza, jacuzzi)
+5. Depto La Molina - $220,000 (3 hab, 110m², cerca colegios)
 
-2. **Casa Familiar en Miraflores** - $450,000
-   - 4 hab, 3 baños, 200m² | Incluye: jardín, terraza, cerca al malecón
+## CUÁNDO USAR CADA HERRAMIENTA
 
-3. **Departamento Compacto en Surco** - $180,000
-   - 2 hab, 2 baños, 85m² | Ideal para parejas o profesionales
+### show_catalog - USAR cuando el usuario dice:
+- "Quiero ver propiedades/opciones/catálogo"
+- "¿Qué tienen disponible?"
+- "Muéstrame lo que tienen"
+- "Dame los precios"
+- "¿Cuánto cuestan?"
+- Cualquier variación de querer VER opciones
 
-4. **Penthouse de Lujo en San Borja** - $380,000
-   - 3 hab, 3 baños, 150m² | Terraza privada, jacuzzi, 2 estacionamientos
+### search_properties - USAR cuando el usuario ya especificó:
+- Una zona específica ("busco en Miraflores")
+- Un presupuesto concreto ("hasta 300 mil")
+- Tipo de propiedad + criterios
+- Después de ver el catálogo y decir cuál le interesa
 
-5. **Departamento Familiar en La Molina** - $220,000
-   - 3 hab, 2 baños, 110m² | Zona tranquila, cerca a colegios
+### save_lead_info - USAR cuando el usuario da:
+- Su nombre
+- Su teléfono o email
+- Dice que quiere visita o más información
 
-## FLUJO DE CONVERSACIÓN NATURAL
+## FLUJO RECOMENDADO
 
-### Saludo inicial
-Cuando alguien te saluda, responde cálidamente y pregunta qué tipo de propiedad busca (casa o departamento), sin pedir más datos de inmediato.
-
-### Si piden ver el catálogo o propiedades
-- Usa la función `show_catalog` para mostrar todas las opciones
-- Después pregunta cuál le interesa más o qué características busca
-
-### Proceso de cualificación (hazlo naturalmente, NO como formulario)
-Obtén gradualmente durante la conversación:
-1. Tipo de propiedad (casa/depto)
-2. Zona preferida
-3. Presupuesto aproximado
-4. Número de habitaciones
-5. Datos de contacto (solo si muestran interés real)
-
-### Recomendaciones
-- Cuando tengas criterios, usa `search_properties` para buscar
-- Presenta las opciones de forma atractiva y entusiasta
-- Destaca características que coincidan con lo que buscan
-
-### Cierre
-- Si muestran interés real, solicita datos para coordinar visita
-- Usa `save_lead_info` para guardar la información
-- Siempre ofrece seguir ayudando
-
-## REGLAS IMPORTANTES
-1. NUNCA inventes propiedades que no están en el catálogo
-2. NUNCA des precios incorrectos
-3. Si no hay propiedades que coincidan, dilo honestamente y sugiere alternativas
-4. Haz UNA pregunta a la vez, no bombardees con muchas preguntas
-5. Si el usuario solo quiere ver opciones sin dar datos, está bien, muéstrale el catálogo
-6. Recuerda lo que el usuario ya te dijo en la conversación
+1. **Saludo**: Bienvenida cálida, pregunta tipo de propiedad
+2. **Si pide ver opciones**: Muestra catálogo inmediatamente (NO pidas presupuesto)
+3. **Si da criterios específicos**: Busca con search_properties
+4. **Si muestra interés en una propiedad**: Ofrece más info y pide datos de contacto
+5. **Si da sus datos**: Guárdalos y confirma
 
 ## ESTILO DE RESPUESTAS
-- Respuestas de 2-4 oraciones máximo (a menos que muestres propiedades)
-- Usa emojis con moderación (1-2 por mensaje)
-- Sé específico, no genérico
-- Evita frases como "¡Claro!" o "¡Por supuesto!" repetidamente
+- Máximo 3-4 oraciones (excepto cuando muestres propiedades)
+- 1-2 emojis por mensaje máximo
+- Sé específico y útil
+- Si no hay propiedades que coincidan, sugiere alternativas del catálogo
+
+## EJEMPLOS DE BUENAS RESPUESTAS
+
+Usuario: "Quiero ver departamentos"
+Bot: [USA show_catalog] → "Aquí tienes nuestros departamentos disponibles... ¿Cuál te llama la atención?"
+
+Usuario: "Dame los precios"  
+Bot: [USA show_catalog] → "Estos son nuestros precios actuales..."
+
+Usuario: "Busco algo económico"
+Bot: [USA show_catalog] → "Te muestro nuestras opciones. La más accesible es el departamento en Surco a $180,000..."
+
+## ERRORES A EVITAR
+❌ NO pidas presupuesto antes de mostrar opciones
+❌ NO hagas muchas preguntas seguidas
+❌ NO repitas "¡Claro!" o "¡Por supuesto!" constantemente
+❌ NO inventes propiedades fuera del catálogo
 """
 
-# Definición de herramientas mejoradas
+# Definición de herramientas
 TOOLS = [
     {
         "type": "function",
         "function": {
             "name": "show_catalog",
-            "description": "Muestra el catálogo completo de propiedades disponibles. Usar cuando el usuario quiere ver todas las opciones, el catálogo, o dice 'quiero ver propiedades'.",
+            "description": "Muestra TODAS las propiedades disponibles. USAR cuando el cliente quiere ver opciones, catálogo, precios o propiedades SIN importar si dio presupuesto o no.",
             "parameters": {
                 "type": "object",
                 "properties": {},
@@ -98,26 +102,26 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "search_properties",
-            "description": "Busca propiedades específicas según criterios del cliente. Usar cuando el usuario ya mencionó preferencias concretas.",
+            "description": "Busca propiedades con criterios ESPECÍFICOS ya mencionados por el cliente (zona, precio, habitaciones). NO usar si el cliente solo quiere ver opciones generales.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "zone": {
                         "type": "string",
-                        "description": "Zona de Lima (San Isidro, Miraflores, Surco, San Borja, La Molina)"
+                        "description": "Zona específica mencionada (San Isidro, Miraflores, Surco, San Borja, La Molina)"
                     },
                     "property_type": {
                         "type": "string",
                         "enum": ["casa", "departamento"],
-                        "description": "Tipo de propiedad"
+                        "description": "Tipo de propiedad especificado"
                     },
                     "max_price": {
                         "type": "integer",
-                        "description": "Precio máximo en dólares"
+                        "description": "Presupuesto máximo en dólares SI lo mencionó"
                     },
                     "min_bedrooms": {
                         "type": "integer",
-                        "description": "Número mínimo de habitaciones"
+                        "description": "Número mínimo de habitaciones SI lo mencionó"
                     }
                 }
             }
@@ -127,55 +131,21 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "save_lead_info",
-            "description": "Guarda información del cliente cuando la proporciona voluntariamente. Solo usar cuando el cliente da sus datos.",
+            "description": "Guarda información de contacto del cliente SOLO cuando la proporciona voluntariamente.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "Nombre del cliente"
-                    },
-                    "phone": {
-                        "type": "string",
-                        "description": "Teléfono"
-                    },
-                    "email": {
-                        "type": "string",
-                        "description": "Email"
-                    },
-                    "budget_min": {
-                        "type": "integer",
-                        "description": "Presupuesto mínimo en dólares"
-                    },
-                    "budget_max": {
-                        "type": "integer",
-                        "description": "Presupuesto máximo en dólares"
-                    },
-                    "zone": {
-                        "type": "string",
-                        "description": "Zona de interés"
-                    },
-                    "property_type": {
-                        "type": "string",
-                        "description": "Tipo: casa o departamento"
-                    },
-                    "bedrooms": {
-                        "type": "integer",
-                        "description": "Habitaciones deseadas"
-                    },
-                    "urgency": {
-                        "type": "string",
-                        "enum": ["inmediato", "1-3 meses", "3-6 meses", "explorando"],
-                        "description": "Urgencia de compra"
-                    },
-                    "interested_property": {
-                        "type": "string",
-                        "description": "Propiedad de interés"
-                    },
-                    "wants_visit": {
-                        "type": "boolean",
-                        "description": "Quiere agendar visita"
-                    }
+                    "name": {"type": "string", "description": "Nombre del cliente"},
+                    "phone": {"type": "string", "description": "Teléfono"},
+                    "email": {"type": "string", "description": "Email"},
+                    "budget_min": {"type": "integer", "description": "Presupuesto mínimo"},
+                    "budget_max": {"type": "integer", "description": "Presupuesto máximo"},
+                    "zone": {"type": "string", "description": "Zona de interés"},
+                    "property_type": {"type": "string", "description": "Tipo preferido"},
+                    "bedrooms": {"type": "integer", "description": "Habitaciones deseadas"},
+                    "urgency": {"type": "string", "enum": ["inmediato", "1-3 meses", "3-6 meses", "explorando"]},
+                    "interested_property": {"type": "string", "description": "Propiedad que le interesa"},
+                    "wants_visit": {"type": "boolean", "description": "Quiere agendar visita"}
                 }
             }
         }
@@ -183,62 +153,66 @@ TOOLS = [
 ]
 
 
-def format_property_card(prop: dict, index: int = None, use_emoji: bool = True) -> str:
+def format_property_card(prop: dict, index: int = None, compact: bool = False) -> str:
     """Formatea una propiedad de forma atractiva."""
     prefix = f"{index}. " if index else ""
     
-    if use_emoji:
-        return f"""
+    if compact:
+        return f"{prefix}**{prop['title']}** - ${prop['price']:,} | {prop['bedrooms']} hab, {prop['area']}m²"
+    
+    return f"""
 {prefix}🏠 **{prop['title']}**
 💵 ${prop['price']:,} USD
 📐 {prop['area']}m² | 🛏️ {prop['bedrooms']} hab | 🚿 {prop['bathrooms']} baños
-✨ {prop['description'][:80]}...
-🎯 Incluye: {', '.join(prop['features'][:3])}
-"""
-    else:
-        return f"""
-{prefix}**{prop['title']}**
-${prop['price']:,} USD
-{prop['area']}m² | {prop['bedrooms']} habitaciones | {prop['bathrooms']} baños
-{prop['description'][:80]}...
-Incluye: {', '.join(prop['features'][:3])}
+✨ {prop['description'][:70]}...
+🎯 {', '.join(prop['features'][:3])}
 """
 
 
-def get_full_catalog(use_emoji: bool = True) -> str:
-    """Genera el catálogo completo de propiedades."""
+def get_full_catalog() -> str:
+    """Genera el catálogo completo formateado."""
     properties = load_properties()
     
     if not properties:
         return "No hay propiedades disponibles en este momento."
     
-    result = "📋 **CATÁLOGO DE PROPIEDADES DISPONIBLES**\n" if use_emoji else "CATÁLOGO DE PROPIEDADES DISPONIBLES\n"
-    result += "─" * 35 + "\n"
+    # Agrupar por tipo
+    deptos = [p for p in properties if p["type"] == "departamento"]
+    casas = [p for p in properties if p["type"] == "casa"]
     
-    for i, prop in enumerate(properties, 1):
-        result += format_property_card(prop, index=i, use_emoji=use_emoji)
+    result = "📋 **NUESTRAS PROPIEDADES DISPONIBLES**\n"
+    result += "━" * 30 + "\n\n"
+    
+    if deptos:
+        result += "🏢 **DEPARTAMENTOS:**\n"
+        for i, prop in enumerate(deptos, 1):
+            result += format_property_card(prop, index=i)
         result += "\n"
     
-    result += "─" * 35 + "\n"
-    result += "💡 ¿Alguna te llama la atención? Puedo darte más detalles." if use_emoji else "¿Alguna te interesa? Puedo darte más información."
+    if casas:
+        result += "🏡 **CASAS:**\n"
+        for i, prop in enumerate(casas, len(deptos) + 1):
+            result += format_property_card(prop, index=i)
+    
+    result += "\n━" * 30 + "\n"
+    result += "💡 Precios desde $180,000 hasta $450,000\n"
+    result += "¿Alguna te interesa? Puedo darte más detalles."
     
     return result
 
 
 def process_tool_calls(tool_calls: list, channel: str, session_id: str, 
                        telegram_username: Optional[str], conversation_history: list) -> tuple[list, dict]:
-    """Procesa las llamadas a herramientas del modelo."""
+    """Procesa las llamadas a herramientas."""
     tool_results = []
     lead_data = {}
-    use_emoji = channel == "telegram"
     
     for tool_call in tool_calls:
         function_name = tool_call.function.name
         arguments = json.loads(tool_call.function.arguments) if tool_call.function.arguments else {}
         
         if function_name == "show_catalog":
-            # Mostrar catálogo completo
-            result = get_full_catalog(use_emoji=use_emoji)
+            result = get_full_catalog()
             tool_results.append({
                 "tool_call_id": tool_call.id,
                 "role": "tool",
@@ -246,7 +220,6 @@ def process_tool_calls(tool_calls: list, channel: str, session_id: str,
             })
             
         elif function_name == "search_properties":
-            # Buscar propiedades con criterios
             properties = search_properties(
                 zone=arguments.get("zone"),
                 property_type=arguments.get("property_type"),
@@ -255,21 +228,16 @@ def process_tool_calls(tool_calls: list, channel: str, session_id: str,
             )
             
             if properties:
-                result = f"🔍 Encontré {len(properties)} propiedad(es) que coinciden:\n\n" if use_emoji else f"Encontré {len(properties)} propiedad(es):\n\n"
+                result = f"🔍 Encontré {len(properties)} propiedad(es):\n\n"
                 for prop in properties[:3]:
-                    result += format_property_card(prop, use_emoji=use_emoji)
+                    result += format_property_card(prop)
             else:
-                # Sugerir alternativas
+                # Si no hay resultados, mostrar alternativas
                 all_props = load_properties()
-                result = "No encontré propiedades con esos criterios exactos. "
-                if arguments.get("max_price"):
-                    cheaper = [p for p in all_props if p["price"] <= arguments.get("max_price", 500000) * 1.2]
-                    if cheaper:
-                        result += f"Pero tengo opciones similares que podrían interesarte. ¿Quieres que te las muestre?"
-                    else:
-                        result += "¿Te gustaría ver el catálogo completo para explorar opciones?"
-                else:
-                    result += "¿Quieres ver el catálogo completo?"
+                result = "No encontré propiedades exactas con esos criterios.\n\n"
+                result += "📋 **Opciones similares disponibles:**\n"
+                for prop in all_props[:3]:
+                    result += format_property_card(prop, compact=True) + "\n"
             
             tool_results.append({
                 "tool_call_id": tool_call.id,
@@ -278,20 +246,18 @@ def process_tool_calls(tool_calls: list, channel: str, session_id: str,
             })
             
         elif function_name == "save_lead_info":
-            # Guardar información del lead
             lead_data.update(arguments)
+            saved_fields = [k for k, v in arguments.items() if v]
+            result = f"✅ Guardado: {', '.join(saved_fields)}"
             
-            saved_lead = save_lead(
+            # Guardar en base de datos
+            save_lead(
                 channel=channel,
                 lead_data=lead_data,
                 conversation_history=conversation_history,
                 telegram_username=telegram_username,
                 session_id=session_id
             )
-            
-            # Mensaje de confirmación interno
-            saved_fields = [k for k, v in arguments.items() if v]
-            result = f"Información guardada: {', '.join(saved_fields)}"
             
             tool_results.append({
                 "tool_call_id": tool_call.id,
@@ -309,48 +275,33 @@ async def process_message(
     session_id: Optional[str] = None,
     telegram_username: Optional[str] = None
 ) -> tuple[str, list, dict]:
-    """
-    Procesa un mensaje del usuario y genera una respuesta natural.
+    """Procesa un mensaje del usuario y genera una respuesta."""
     
-    Args:
-        message: Mensaje del usuario
-        conversation_history: Historial de la conversación
-        channel: Canal de origen ("web" o "telegram")
-        session_id: ID de sesión para web
-        telegram_username: Username de Telegram si aplica
-    
-    Returns:
-        tuple: (respuesta, historial actualizado, datos del lead)
-    """
     if not client:
-        return "Lo siento, el servicio no está disponible en este momento. Por favor intenta más tarde.", conversation_history, {}
+        return "Lo siento, el servicio no está disponible. Intenta más tarde.", conversation_history, {}
     
-    # Agregar mensaje del usuario al historial
+    # Agregar mensaje al historial
     conversation_history.append({
         "role": "user",
         "content": message
     })
     
-    # Preparar mensajes para la API
     messages = [{"role": "system", "content": SYSTEM_PROMPT}] + conversation_history
     
     try:
-        # Llamar a OpenAI con gpt-4o-mini
         response = client.chat.completions.create(
             model=MODEL,
             messages=messages,
             tools=TOOLS,
             tool_choice="auto",
             max_tokens=800,
-            temperature=0.8  # Un poco más creativo para respuestas naturales
+            temperature=0.8
         )
         
         assistant_message = response.choices[0].message
         lead_data = {}
         
-        # Verificar si hay llamadas a herramientas
         if assistant_message.tool_calls:
-            # Agregar mensaje del asistente con tool_calls al historial
             conversation_history.append({
                 "role": "assistant",
                 "content": assistant_message.content or "",
@@ -367,7 +318,6 @@ async def process_message(
                 ]
             })
             
-            # Procesar herramientas
             tool_results, lead_data = process_tool_calls(
                 assistant_message.tool_calls,
                 channel,
@@ -376,11 +326,10 @@ async def process_message(
                 conversation_history
             )
             
-            # Agregar resultados de herramientas
             for result in tool_results:
                 conversation_history.append(result)
             
-            # Segunda llamada para obtener respuesta final contextualizada
+            # Segunda llamada para respuesta final
             messages = [{"role": "system", "content": SYSTEM_PROMPT}] + conversation_history
             
             final_response = client.chat.completions.create(
@@ -394,7 +343,6 @@ async def process_message(
         else:
             bot_response = assistant_message.content
         
-        # Agregar respuesta al historial
         conversation_history.append({
             "role": "assistant",
             "content": bot_response
@@ -403,6 +351,6 @@ async def process_message(
         return bot_response, conversation_history, lead_data
         
     except Exception as e:
-        error_message = "Disculpa, tuve un pequeño problema técnico. ¿Podrías repetir lo que me decías?"
-        print(f"Error en process_message: {str(e)}")
+        error_message = "Disculpa, tuve un problema técnico. ¿Podrías repetirlo?"
+        print(f"Error: {str(e)}")
         return error_message, conversation_history, {}
