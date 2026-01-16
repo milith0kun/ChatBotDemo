@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Header.css';
 
@@ -50,12 +51,21 @@ const Header = () => {
     const location = useLocation();
     const isChat = location.pathname === '/';
     const isDashboard = location.pathname === '/dashboard';
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    const toggleMobileMenu = () => {
+        setMobileMenuOpen(!mobileMenuOpen);
+    };
+
+    const closeMobileMenu = () => {
+        setMobileMenuOpen(false);
+    };
 
     return (
         <header className="header">
             <div className="header-container">
                 {/* Brand */}
-                <Link to="/" className="header-brand">
+                <Link to="/" className="header-brand" onClick={closeMobileMenu}>
                     <div className="header-logo">
                         <LogoIcon />
                     </div>
@@ -66,10 +76,11 @@ const Header = () => {
                 </Link>
 
                 {/* Navigation */}
-                <nav className="header-nav">
+                <nav className={`header-nav ${mobileMenuOpen ? 'mobile-open' : ''}`}>
                     <Link
                         to="/"
                         className={`nav-item ${isChat ? 'active' : ''}`}
+                        onClick={closeMobileMenu}
                     >
                         <ChatIcon />
                         <span>Chat</span>
@@ -78,6 +89,7 @@ const Header = () => {
                     <Link
                         to="/dashboard"
                         className={`nav-item ${isDashboard ? 'active' : ''}`}
+                        onClick={closeMobileMenu}
                     >
                         <DashboardIcon />
                         <span>Dashboard</span>
@@ -90,6 +102,7 @@ const Header = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="telegram-link"
+                        onClick={closeMobileMenu}
                     >
                         <TelegramIcon />
                         <span>Telegram</span>
@@ -98,12 +111,21 @@ const Header = () => {
                 </nav>
 
                 {/* Mobile Menu Button */}
-                <button className="mobile-menu-btn" aria-label="Menu">
+                <button
+                    className={`mobile-menu-btn ${mobileMenuOpen ? 'open' : ''}`}
+                    aria-label="Menu"
+                    onClick={toggleMobileMenu}
+                >
                     <span></span>
                     <span></span>
                     <span></span>
                 </button>
             </div>
+
+            {/* Mobile Overlay */}
+            {mobileMenuOpen && (
+                <div className="mobile-overlay" onClick={closeMobileMenu} />
+            )}
         </header>
     );
 };
