@@ -1,0 +1,96 @@
+[
+    {
+        "id": "prop-001",
+        "title": "Departamento Moderno en San Isidro",
+        "type": "departamento",
+        "zone": "San Isidro",
+        "price": 250000,
+        "bedrooms": 3,
+        "bathrooms": 2,
+        "area": 120,
+        "description": "Hermoso departamento con acabados de lujo y vista al parque. Ubicado en una de las zonas más exclusivas de Lima.",
+        "features": [
+            "estacionamiento",
+            "gimnasio",
+            "piscina",
+            "seguridad 24/7",
+            "área social"
+        ],
+        "image": "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800"
+    },
+    {
+        "id": "prop-002",
+        "title": "Casa Familiar en Miraflores",
+        "type": "casa",
+        "zone": "Miraflores",
+        "price": 450000,
+        "bedrooms": 4,
+        "bathrooms": 3,
+        "area": 200,
+        "description": "Amplia casa con jardín y terraza, perfecta para familias. A solo minutos del malecón y centros comerciales.",
+        "features": [
+            "jardín",
+            "terraza",
+            "estacionamiento doble",
+            "cerca al malecón",
+            "cocina equipada"
+        ],
+        "image": "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800"
+    },
+    {
+        "id": "prop-003",
+        "title": "Departamento Compacto en Surco",
+        "type": "departamento",
+        "zone": "Santiago de Surco",
+        "price": 180000,
+        "bedrooms": 2,
+        "bathrooms": 2,
+        "area": 85,
+        "description": "Departamento ideal para jóvenes profesionales o parejas. Excelente ubicación con acceso a principales vías.",
+        "features": [
+            "estacionamiento",
+            "área de lavandería",
+            "lobby equipado",
+            "cerca a centros comerciales"
+        ],
+        "image": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800"
+    },
+    {
+        "id": "prop-004",
+        "title": "Penthouse de Lujo en San Borja",
+        "type": "departamento",
+        "zone": "San Borja",
+        "price": 380000,
+        "bedrooms": 3,
+        "bathrooms": 3,
+        "area": 150,
+        "description": "Espectacular penthouse en último piso con terraza privada y vista panorámica de la ciudad.",
+        "features": [
+            "terraza privada",
+            "jacuzzi",
+            "2 estacionamientos",
+            "gimnasio",
+            "sauna"
+        ],
+        "image": "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800"
+    },
+    {
+        "id": "prop-005",
+        "title": "Departamento Familiar en La Molina",
+        "type": "departamento",
+        "zone": "La Molina",
+        "price": 220000,
+        "bedrooms": 3,
+        "bathrooms": 2,
+        "area": 110,
+        "description": "Departamento en zona residencial tranquila, perfecta para familias con niños. Cerca a colegios y parques.",
+        "features": [
+            "estacionamiento",
+            "área de niños",
+            "seguridad",
+            "cerca a colegios",
+            "área verde"
+        ],
+        "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800"
+    }
+]
