@@ -1,23 +1,10 @@
+import ReactMarkdown from 'react-markdown';
 import './Message.css';
-
-// SVG Icons for avatars
-const BotIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-        <polyline points="9 22 9 12 15 12 15 22"/>
-    </svg>
-);
-
-const UserIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-        <circle cx="12" cy="7" r="4"/>
-    </svg>
-);
 
 const Message = ({ content, role, timestamp }) => {
     const isUser = role === 'user';
 
+    // Formatear hora
     const formatTime = (date) => {
         return new Date(date).toLocaleTimeString('es-PE', {
             hour: '2-digit',
@@ -26,13 +13,33 @@ const Message = ({ content, role, timestamp }) => {
     };
 
     return (
-        <div className={`message ${isUser ? 'message-user' : 'message-bot'}`}>
+        <div className={`message ${isUser ? 'user' : 'bot'}`}>
             <div className="message-avatar">
-                {isUser ? <UserIcon /> : <BotIcon />}
+                {isUser ? '👤' : '🏠'}
             </div>
-            <div className="message-body">
+            <div className="message-content">
                 <div className="message-bubble">
-                    <p className="message-text">{content}</p>
+                    {isUser ? (
+                        content
+                    ) : (
+                        <ReactMarkdown
+                            components={{
+                                // Personalizar estilos de los elementos Markdown
+                                p: ({ children }) => <p className="md-paragraph">{children}</p>,
+                                strong: ({ children }) => <strong className="md-bold">{children}</strong>,
+                                em: ({ children }) => <em className="md-italic">{children}</em>,
+                                ul: ({ children }) => <ul className="md-list">{children}</ul>,
+                                ol: ({ children }) => <ol className="md-list md-list-ordered">{children}</ol>,
+                                li: ({ children }) => <li className="md-list-item">{children}</li>,
+                                h1: ({ children }) => <h3 className="md-heading">{children}</h3>,
+                                h2: ({ children }) => <h3 className="md-heading">{children}</h3>,
+                                h3: ({ children }) => <h4 className="md-heading">{children}</h4>,
+                                hr: () => <hr className="md-divider" />,
+                            }}
+                        >
+                            {content}
+                        </ReactMarkdown>
+                    )}
                 </div>
                 <span className="message-time">
                     {formatTime(timestamp)}
@@ -42,19 +49,17 @@ const Message = ({ content, role, timestamp }) => {
     );
 };
 
-// Typing Indicator Component
+// Componente para el indicador de escritura
 export const TypingIndicator = () => {
     return (
-        <div className="message message-bot">
-            <div className="message-avatar">
-                <BotIcon />
-            </div>
-            <div className="message-body">
-                <div className="message-bubble typing-bubble">
+        <div className="message bot">
+            <div className="message-avatar">🏠</div>
+            <div className="message-content">
+                <div className="message-bubble">
                     <div className="typing-indicator">
-                        <span className="typing-dot" style={{ animationDelay: '0ms' }} />
-                        <span className="typing-dot" style={{ animationDelay: '150ms' }} />
-                        <span className="typing-dot" style={{ animationDelay: '300ms' }} />
+                        <span className="typing-dot"></span>
+                        <span className="typing-dot"></span>
+                        <span className="typing-dot"></span>
                     </div>
                 </div>
             </div>

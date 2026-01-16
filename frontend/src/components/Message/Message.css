@@ -128,10 +128,14 @@
 }
 
 @keyframes typingBounce {
-    0%, 60%, 100% {
+
+    0%,
+    60%,
+    100% {
         transform: translateY(0);
         opacity: 0.4;
     }
+
     30% {
         transform: translateY(-6px);
         opacity: 1;
@@ -171,6 +175,67 @@
 .message-user .message-bubble .property-card {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ==================== MARKDOWN STYLES ==================== */
+.message-bubble .md-paragraph {
+    margin: 0 0 var(--space-2) 0;
+}
+
+.message-bubble .md-paragraph:last-child {
+    margin-bottom: 0;
+}
+
+.message-bubble .md-bold {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.message-user .message-bubble .md-bold {
+    color: white;
+}
+
+.message-bubble .md-italic {
+    font-style: italic;
+}
+
+.message-bubble .md-heading {
+    font-weight: 700;
+    margin: var(--space-3) 0 var(--space-2) 0;
+    color: var(--text-primary);
+    font-size: var(--text-base);
+}
+
+.message-bubble .md-heading:first-child {
+    margin-top: 0;
+}
+
+.message-bubble .md-list {
+    margin: var(--space-2) 0;
+    padding-left: var(--space-5);
+}
+
+.message-bubble .md-list-ordered {
+    list-style-type: decimal;
+}
+
+.message-bubble .md-list-item {
+    margin-bottom: var(--space-2);
+    line-height: 1.5;
+}
+
+.message-bubble .md-list-item:last-child {
+    margin-bottom: 0;
+}
+
+.message-bubble .md-divider {
+    border: none;
+    border-top: 1px solid var(--border-light);
+    margin: var(--space-3) 0;
+}
+
+.message-user .message-bubble .md-divider {
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 /* ==================== RESPONSIVE ==================== */
