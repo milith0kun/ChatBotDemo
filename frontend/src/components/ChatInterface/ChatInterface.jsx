@@ -6,60 +6,60 @@ import './ChatInterface.css';
 // SVG Icons
 const SendIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="22" y1="2" x2="11" y2="13"/>
-        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        <line x1="22" y1="2" x2="11" y2="13" />
+        <polygon points="22 2 15 22 11 13 2 9 22 2" />
     </svg>
 );
 
 const HomeIcon = () => (
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-        <polyline points="9 22 9 12 15 12 15 22"/>
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
     </svg>
 );
 
 const BuildingIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
-        <path d="M9 22v-4h6v4"/>
-        <path d="M8 6h.01"/>
-        <path d="M16 6h.01"/>
-        <path d="M12 6h.01"/>
-        <path d="M12 10h.01"/>
-        <path d="M12 14h.01"/>
-        <path d="M16 10h.01"/>
-        <path d="M16 14h.01"/>
-        <path d="M8 10h.01"/>
-        <path d="M8 14h.01"/>
+        <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+        <path d="M9 22v-4h6v4" />
+        <path d="M8 6h.01" />
+        <path d="M16 6h.01" />
+        <path d="M12 6h.01" />
+        <path d="M12 10h.01" />
+        <path d="M12 14h.01" />
+        <path d="M16 10h.01" />
+        <path d="M16 14h.01" />
+        <path d="M8 10h.01" />
+        <path d="M8 14h.01" />
     </svg>
 );
 
 const HouseIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-        <polyline points="9 22 9 12 15 12 15 22"/>
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
     </svg>
 );
 
 const MapPinIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-        <circle cx="12" cy="10" r="3"/>
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+        <circle cx="12" cy="10" r="3" />
     </svg>
 );
 
 const DollarIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" y1="1" x2="12" y2="23"/>
-        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        <line x1="12" y1="1" x2="12" y2="23" />
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
     </svg>
 );
 
 const AlertCircleIcon = () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="12"/>
-        <line x1="12" y1="16" x2="12.01" y2="16"/>
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
     </svg>
 );
 
@@ -143,12 +143,7 @@ const ChatInterface = () => {
                 {/* Chat Header */}
                 <div className="chat-header">
                     <div className="chat-header-content">
-                        <div className="chat-avatar-wrapper">
-                            <div className="chat-avatar">
-                                <HomeIcon />
-                            </div>
-                            <span className="status-indicator" />
-                        </div>
+
                         <div className="chat-header-info">
                             <h2>Asistente InmoBot</h2>
                             <div className="chat-status">
