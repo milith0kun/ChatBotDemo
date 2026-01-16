@@ -2,17 +2,24 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Header.css';
 
-// SVG Icons as components
+// AI Bot Logo - Moderno y tecnológico
 const LogoIcon = () => (
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="32" height="32" rx="8" fill="url(#logo-gradient)" />
-        <path d="M16 6L8 12V24H12V18H20V24H24V12L16 6Z" fill="white" fillOpacity="0.95" />
-        <path d="M14 14H18V18H14V14Z" fill="url(#logo-gradient)" />
-        <circle cx="16" cy="10" r="1.5" fill="white" fillOpacity="0.6" />
+        <rect width="32" height="32" rx="8" fill="url(#ai-gradient)" />
+        {/* Robot/AI face */}
+        <circle cx="16" cy="14" r="8" fill="white" fillOpacity="0.95" />
+        <circle cx="13" cy="13" r="2" fill="url(#ai-gradient)" />
+        <circle cx="19" cy="13" r="2" fill="url(#ai-gradient)" />
+        <path d="M12 17C12 17 14 19 16 19C18 19 20 17 20 17" stroke="url(#ai-gradient)" strokeWidth="1.5" strokeLinecap="round" />
+        {/* Antenna */}
+        <circle cx="16" cy="5" r="1.5" fill="white" fillOpacity="0.8" />
+        <line x1="16" y1="6" x2="16" y2="6" stroke="white" strokeWidth="1.5" />
+        {/* Circuit lines */}
+        <path d="M8 24H12M20 24H24M14 26H18" stroke="white" strokeOpacity="0.6" strokeWidth="1.5" strokeLinecap="round" />
         <defs>
-            <linearGradient id="logo-gradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#0d4f4f" />
-                <stop offset="1" stopColor="#1a6b6b" />
+            <linearGradient id="ai-gradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#6366f1" />
+                <stop offset="1" stopColor="#8b5cf6" />
             </linearGradient>
         </defs>
     </svg>
@@ -70,8 +77,8 @@ const Header = () => {
                         <LogoIcon />
                     </div>
                     <div className="header-brand-text">
-                        <h1 className="header-title">InmoBot</h1>
-                        <p className="header-subtitle">Asistente Inmobiliario</p>
+                        <h1 className="header-title">InmoBot AI</h1>
+                        <p className="header-subtitle">Asistente Inteligente</p>
                     </div>
                 </Link>
 
