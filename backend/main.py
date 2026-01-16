@@ -6,7 +6,7 @@ import uuid
 
 from config import FRONTEND_URL, PORT
 from modules.ai_agent import process_message
-from modules.lead_manager import get_all_leads, load_properties, get_lead_by_id
+from modules.lead_manager import get_all_leads, load_properties, get_lead_by_id, create_or_update_lead
 from modules.telegram_bot import send_telegram_message, extract_message_data, set_webhook, get_webhook_info
 
 # Inicializar FastAPI
@@ -99,6 +99,14 @@ async def chat_web(request: ChatRequest):
     # Actualizar historial en sesión
     sessions[session_id] = updated_history
     
+    # Crear o actualizar lead automáticamente en cada interacción
+    create_or_update_lead(
+        channel="web",
+        session_id=session_id,
+        lead_data=lead_data or {},
+        conversation_history=updated_history
+    )
+    
     return ChatResponse(
         response=response,
         session_id=session_id,
@@ -147,6 +155,21 @@ async def telegram_webhook(request: Request):
         
         # Actualizar historial
         telegram_conversations[telegram_session] = updated_history
+        
+        # Crear o actualizar lead automáticamente en cada interacción
+        # Incluir nombre de Telegram si está disponible
+        combined_lead_data = lead_data or {}
+        if first_name and not combined_lead_data.get("name"):
+            combined_lead_data["name"] = first_name
+        
+        create_or_update_lead(
+            channel="telegram",
+            session_id=telegram_session,
+            telegram_username=username,
+            telegram_chat_id=str(chat_id),
+            lead_data=combined_lead_data,
+            conversation_history=updated_history
+        )
         
         # Enviar respuesta a Telegram
         await send_telegram_message(chat_id, response)
