@@ -148,7 +148,7 @@ const ChatInterface = () => {
                             <h2>Asistente InmoBot</h2>
                             <div className="chat-status">
                                 <span className="status-dot" />
-                                <span>En linea - Listo para ayudarte</span>
+                                <span>En linea</span>
                             </div>
                         </div>
                     </div>
@@ -159,9 +159,7 @@ const ChatInterface = () => {
                     {messages.length === 0 ? (
                         <div className="welcome-section">
                             <div className="welcome-content">
-                                <div className="welcome-icon">
-                                    <HomeIcon />
-                                </div>
+
                                 <h3>Bienvenido a InmoBot</h3>
                                 <p>
                                     Tu asistente personal para encontrar la propiedad perfecta en Lima.
