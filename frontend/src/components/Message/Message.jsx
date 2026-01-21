@@ -1,7 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { getVoiceResponse } from '../../services/api';
 import './Message.css';
+
+// Evento global para detener todos los audios
+const STOP_ALL_AUDIO_EVENT = 'stopAllAudio';
 
 const Message = ({ content, role, timestamp, isVoice = false, showAudioButton = false }) => {
     const isUser = role === 'user';
@@ -17,6 +20,22 @@ const Message = ({ content, role, timestamp, isVoice = false, showAudioButton = 
         });
     };
 
+    // Escuchar evento global para detener audio
+    useEffect(() => {
+        const handleStopAllAudio = () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
+            setIsPlaying(false);
+        };
+
+        window.addEventListener(STOP_ALL_AUDIO_EVENT, handleStopAllAudio);
+        return () => {
+            window.removeEventListener(STOP_ALL_AUDIO_EVENT, handleStopAllAudio);
+        };
+    }, []);
+
     // Reproducir audio de la respuesta
     const handlePlayAudio = async () => {
         if (isPlaying) {
@@ -28,6 +47,9 @@ const Message = ({ content, role, timestamp, isVoice = false, showAudioButton = 
             setIsPlaying(false);
             return;
         }
+
+        // Emitir evento para detener otros audios
+        window.dispatchEvent(new CustomEvent(STOP_ALL_AUDIO_EVENT));
 
         setIsLoadingAudio(true);
         try {

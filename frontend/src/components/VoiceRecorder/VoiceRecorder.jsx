@@ -1,6 +1,9 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { sendVoiceMessage, getVoiceResponse } from '../../services/api';
 import './VoiceRecorder.css';
+
+// Evento global para detener todos los audios
+const STOP_ALL_AUDIO_EVENT = 'stopAllAudio';
 
 // Iconos SVG
 const MicrophoneIcon = () => (
@@ -45,6 +48,22 @@ const VoiceRecorder = ({ onVoiceMessage, sessionId, disabled = false }) => {
     // Tiempo máximo de grabación (60 segundos)
     const MAX_RECORDING_TIME = 60;
 
+    // Escuchar evento global para detener audio
+    useEffect(() => {
+        const handleStopAllAudio = () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
+            setIsPlaying(false);
+        };
+
+        window.addEventListener(STOP_ALL_AUDIO_EVENT, handleStopAllAudio);
+        return () => {
+            window.removeEventListener(STOP_ALL_AUDIO_EVENT, handleStopAllAudio);
+        };
+    }, []);
+
     // Solicitar permiso de micrófono
     const requestPermission = useCallback(async () => {
         try {
@@ -64,6 +83,16 @@ const VoiceRecorder = ({ onVoiceMessage, sessionId, disabled = false }) => {
     // Iniciar grabación
     const startRecording = useCallback(async () => {
         setError(null);
+
+        // Emitir evento para detener TODOS los audios (incluyendo de otros componentes)
+        window.dispatchEvent(new CustomEvent(STOP_ALL_AUDIO_EVENT));
+
+        // Detener cualquier audio local que esté reproduciéndose
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+            setIsPlaying(false);
+        }
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({

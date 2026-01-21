@@ -68,12 +68,22 @@ const ChatInterface = () => {
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [sessionId, setSessionId] = useState(null);
+    // Cargar sessionId desde localStorage si existe
+    const [sessionId, setSessionId] = useState(() => {
+        return localStorage.getItem('inmobot_session_id') || null;
+    });
     const [error, setError] = useState(null);
     const [isVoiceProcessing, setIsVoiceProcessing] = useState(false);
 
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
+
+    // Guardar sessionId en localStorage cuando cambie
+    useEffect(() => {
+        if (sessionId) {
+            localStorage.setItem('inmobot_session_id', sessionId);
+        }
+    }, [sessionId]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -136,8 +146,8 @@ const ChatInterface = () => {
     const handleVoiceMessage = ({ transcribedText, botResponse, sessionId: newSessionId, showAudioButton }) => {
         if (!transcribedText || !botResponse) return;
 
-        // Actualizar session_id si es nuevo
-        if (newSessionId && !sessionId) {
+        // Siempre actualizar session_id cuando viene del backend
+        if (newSessionId) {
             setSessionId(newSessionId);
         }
 
@@ -170,6 +180,14 @@ const ChatInterface = () => {
         { icon: DollarIcon, label: 'Ver precios', action: '¿Cuáles son los precios?' }
     ];
 
+    // Iniciar nueva conversación
+    const handleNewConversation = () => {
+        setMessages([]);
+        setSessionId(null);
+        localStorage.removeItem('inmobot_session_id');
+        setError(null);
+    };
+
     return (
         <div className="chat-wrapper">
             <div className="chat-container">
@@ -184,6 +202,16 @@ const ChatInterface = () => {
                                 <span>En línea</span>
                             </div>
                         </div>
+                        {/* Botón Nueva Conversación */}
+                        {messages.length > 0 && (
+                            <button
+                                className="new-chat-btn"
+                                onClick={handleNewConversation}
+                                title="Nueva conversación"
+                            >
+                                🔄 Nueva
+                            </button>
+                        )}
                     </div>
                 </div>
 
