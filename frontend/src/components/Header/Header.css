@@ -258,11 +258,13 @@
     }
 
     .header-subtitle {
-        display: none;
+        display: block;
+        /* Mostrar en móvil */
+        font-size: 10px;
     }
 
     .header-title {
-        font-size: var(--text-lg);
+        font-size: var(--text-base);
     }
 }
 
@@ -303,12 +305,21 @@
 
 @media (max-width: 480px) {
     .header-brand-text {
-        display: none;
+        display: flex;
+        /* Mostrar en móvil pequeño */
+    }
+
+    .header-title {
+        font-size: var(--text-sm);
+    }
+
+    .header-subtitle {
+        font-size: 9px;
     }
 
     .header-logo svg {
-        width: 36px;
-        height: 36px;
+        width: 28px;
+        height: 28px;
     }
 }
 

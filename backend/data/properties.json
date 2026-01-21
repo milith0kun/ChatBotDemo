@@ -1,96 +1,196 @@
 [
     {
         "id": "prop-001",
-        "title": "Departamento Moderno en San Isidro",
-        "type": "departamento",
-        "zone": "San Isidro",
-        "price": 250000,
-        "bedrooms": 3,
-        "bathrooms": 2,
-        "area": 120,
-        "description": "Hermoso departamento con acabados de lujo y vista al parque. Ubicado en una de las zonas más exclusivas de Lima.",
-        "features": [
-            "estacionamiento",
-            "gimnasio",
-            "piscina",
-            "seguridad 24/7",
-            "área social"
-        ],
-        "image": "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800"
-    },
-    {
-        "id": "prop-002",
-        "title": "Casa Familiar en Miraflores",
-        "type": "casa",
-        "zone": "Miraflores",
-        "price": 450000,
-        "bedrooms": 4,
-        "bathrooms": 3,
-        "area": 200,
-        "description": "Amplia casa con jardín y terraza, perfecta para familias. A solo minutos del malecón y centros comerciales.",
-        "features": [
-            "jardín",
-            "terraza",
-            "estacionamiento doble",
-            "cerca al malecón",
-            "cocina equipada"
-        ],
-        "image": "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800"
-    },
-    {
-        "id": "prop-003",
-        "title": "Departamento Compacto en Surco",
-        "type": "departamento",
-        "zone": "Santiago de Surco",
-        "price": 180000,
+        "title": "Villa Paraíso",
+        "type": "apartamento",
+        "zone": "Costa del Sol, Málaga",
+        "objective": "venta",
+        "price": 200000,
         "bedrooms": 2,
         "bathrooms": 2,
         "area": 85,
-        "description": "Departamento ideal para jóvenes profesionales o parejas. Excelente ubicación con acceso a principales vías.",
+        "description": "Precioso apartamento en la Costa del Sol, perfecto para parejas o inversores. Ubicado cerca de la playa con excelentes vistas y acceso a todas las comodidades.",
         "features": [
-            "estacionamiento",
-            "área de lavandería",
-            "lobby equipado",
-            "cerca a centros comerciales"
+            "terraza",
+            "piscina comunitaria",
+            "cerca de la playa",
+            "parking"
         ],
-        "image": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800"
+        "target": "Parejas o inversores"
+    },
+    {
+        "id": "prop-002",
+        "title": "Villa María",
+        "type": "villa",
+        "zone": "La Romana, Alicante",
+        "objective": "venta",
+        "price": 450000,
+        "bedrooms": 3,
+        "bathrooms": 3,
+        "area": 180,
+        "description": "Impresionante villa con jardín privado y piscina propia. Ideal para familias que buscan espacio y privacidad con vistas panorámicas.",
+        "features": [
+            "jardín privado",
+            "piscina propia",
+            "garaje doble",
+            "vistas panorámicas"
+        ],
+        "target": "Familias con presupuesto alto"
+    },
+    {
+        "id": "prop-003",
+        "title": "San Jacobo",
+        "type": "apartamento",
+        "zone": "Costa Blanca, Alicante",
+        "objective": "alquiler",
+        "price": 150000,
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "area": 55,
+        "description": "Apartamento completamente amueblado en urbanización con seguridad. Perfecto para alquiler vacacional o residencia permanente.",
+        "features": [
+            "completamente amueblado",
+            "terraza",
+            "urbanización con seguridad",
+            "zona tranquila"
+        ],
+        "target": "Alquiler vacacional o permanente"
     },
     {
         "id": "prop-004",
-        "title": "Penthouse de Lujo en San Borja",
-        "type": "departamento",
-        "zone": "San Borja",
-        "price": 380000,
-        "bedrooms": 3,
-        "bathrooms": 3,
-        "area": 150,
-        "description": "Espectacular penthouse en último piso con terraza privada y vista panorámica de la ciudad.",
+        "title": "Chalet Mediterráneo",
+        "type": "villa",
+        "zone": "Marbella",
+        "objective": "venta",
+        "price": 890000,
+        "bedrooms": 4,
+        "bathrooms": 4,
+        "area": 250,
+        "description": "Lujoso chalet en zona premium de Marbella con piscina infinity y vistas espectaculares al mar Mediterráneo. El máximo lujo y confort.",
         "features": [
-            "terraza privada",
+            "piscina infinity",
+            "jardín tropical",
             "jacuzzi",
-            "2 estacionamientos",
-            "gimnasio",
-            "sauna"
+            "gimnasio privado",
+            "vistas al mar"
         ],
-        "image": "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800"
+        "target": "Lujo, zona premium"
     },
     {
         "id": "prop-005",
-        "title": "Departamento Familiar en La Molina",
-        "type": "departamento",
-        "zone": "La Molina",
-        "price": 220000,
+        "title": "Apartamento Centro",
+        "type": "apartamento",
+        "zone": "Valencia Centro",
+        "objective": "venta",
+        "price": 280000,
+        "bedrooms": 2,
+        "bathrooms": 2,
+        "area": 95,
+        "description": "Apartamento completamente reformado en pleno centro de Valencia. Perfecto para profesionales o familias pequeñas que valoran la ubicación céntrica.",
+        "features": [
+            "reformado completamente",
+            "balcón",
+            "ascensor",
+            "zona céntrica"
+        ],
+        "target": "Profesionales o familias pequeñas"
+    },
+    {
+        "id": "prop-006",
+        "title": "Casa Rural",
+        "type": "casa",
+        "zone": "Segovia",
+        "objective": "venta",
+        "price": 195000,
         "bedrooms": 3,
         "bathrooms": 2,
-        "area": 110,
-        "description": "Departamento en zona residencial tranquila, perfecta para familias con niños. Cerca a colegios y parques.",
+        "area": 150,
+        "description": "Encantadora casa tradicional en zona rural de Segovia. Ideal para quienes buscan tranquilidad y contacto con la naturaleza.",
         "features": [
-            "estacionamiento",
-            "área de niños",
-            "seguridad",
-            "cerca a colegios",
-            "área verde"
+            "chimenea",
+            "jardín amplio",
+            "bodega",
+            "zona tranquila"
         ],
-        "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800"
+        "target": "Escapada o vida rural"
+    },
+    {
+        "id": "prop-007",
+        "title": "Penthouse Barcelona",
+        "type": "ático",
+        "zone": "Eixample, Barcelona",
+        "objective": "venta",
+        "price": 650000,
+        "bedrooms": 3,
+        "bathrooms": 2,
+        "area": 140,
+        "description": "Espectacular ático en el exclusivo barrio del Eixample con terraza de 80m² y vistas panorámicas de Barcelona. Lujo urbano en su máxima expresión.",
+        "features": [
+            "terraza de 80m²",
+            "vistas panorámicas",
+            "parking",
+            "trastero",
+            "zona exclusiva"
+        ],
+        "target": "Lujo urbano"
+    },
+    {
+        "id": "prop-008",
+        "title": "Apartamento Playa",
+        "type": "apartamento",
+        "zone": "Benidorm",
+        "objective": "alquiler",
+        "price": 1200,
+        "priceType": "mes",
+        "bedrooms": 2,
+        "bathrooms": 1,
+        "area": 70,
+        "description": "Apartamento en primera línea de playa en Benidorm. Completamente amueblado y equipado para alquiler de larga temporada.",
+        "features": [
+            "primera línea de playa",
+            "piscina comunitaria",
+            "aire acondicionado",
+            "amueblado"
+        ],
+        "target": "Alquiler de larga temporada"
+    },
+    {
+        "id": "prop-009",
+        "title": "Villa Golf",
+        "type": "villa",
+        "zone": "Murcia",
+        "objective": "venta",
+        "price": 385000,
+        "bedrooms": 3,
+        "bathrooms": 3,
+        "area": 200,
+        "description": "Villa con vistas directas al campo de golf. Perfecta para amantes del golf que buscan vivir junto a su pasión.",
+        "features": [
+            "vistas al campo de golf",
+            "piscina",
+            "jardín",
+            "terraza cubierta",
+            "garaje"
+        ],
+        "target": "Amantes del golf"
+    },
+    {
+        "id": "prop-010",
+        "title": "Loft Moderno",
+        "type": "loft",
+        "zone": "Malasaña, Madrid",
+        "objective": "venta",
+        "price": 320000,
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "area": 65,
+        "description": "Loft de diseño contemporáneo en el corazón de Malasaña. Techos altos, espacios diáfanos y completamente reformado. Ideal para jóvenes profesionales.",
+        "features": [
+            "diseño contemporáneo",
+            "techos altos",
+            "completamente reformado",
+            "zona Malasaña"
+        ],
+        "target": "Jóvenes profesionales o inversión"
     }
 ]

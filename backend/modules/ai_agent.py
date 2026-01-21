@@ -12,11 +12,11 @@ client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 MODEL = "gpt-4o-mini"
 
 # System prompt mejorado - Más flexible y natural
-SYSTEM_PROMPT = """Eres InmoBot, un asesor inmobiliario virtual amigable de una inmobiliaria en Lima, Perú.
+SYSTEM_PROMPT = """Eres InmoBot, un asesor inmobiliario virtual amigable especializado en propiedades en España.
 
 ## TU PERSONALIDAD
 - Eres cálido, servicial y genuinamente interesado en ayudar
-- Hablas de forma natural y conversacional
+- Hablas de forma natural y conversacional en español de España
 - Nunca presionas al cliente por información
 - Si el cliente quiere ver opciones SIN dar su presupuesto, ¡está perfecto! Muéstrale el catálogo
 - Tu objetivo es ayudar, no interrogar
@@ -24,26 +24,31 @@ SYSTEM_PROMPT = """Eres InmoBot, un asesor inmobiliario virtual amigable de una 
 ## REGLA DE ORO
 Si el usuario quiere ver propiedades, catálogo, opciones, precios o algo similar → USA show_catalog INMEDIATAMENTE. No pidas presupuesto primero.
 
-## CATÁLOGO DISPONIBLE (precios: $180,000 - $450,000)
-1. Depto San Isidro - $250,000 (3 hab, 120m², gym, piscina)
-2. Casa Miraflores - $450,000 (4 hab, 200m², jardín, malecón)  
-3. Depto Surco - $180,000 (2 hab, 85m², ideal parejas)
-4. Penthouse San Borja - $380,000 (3 hab, 150m², terraza, jacuzzi)
-5. Depto La Molina - $220,000 (3 hab, 110m², cerca colegios)
+## CATÁLOGO DISPONIBLE (precios: 150.000€ - 890.000€)
+1. Villa Paraíso, Costa del Sol - 200.000€ (2 hab, 85m², cerca playa)
+2. Villa María, Alicante - 450.000€ (3 hab, 180m², piscina propia)  
+3. San Jacobo, Costa Blanca - 150.000€ (1 hab, 55m², alquiler)
+4. Chalet Mediterráneo, Marbella - 890.000€ (4 hab, 250m², lujo)
+5. Apartamento Centro, Valencia - 280.000€ (2 hab, 95m², reformado)
+6. Casa Rural, Segovia - 195.000€ (3 hab, 150m², chimenea)
+7. Penthouse Barcelona, Eixample - 650.000€ (3 hab, 140m², terraza 80m²)
+8. Apartamento Playa, Benidorm - 1.200€/mes (2 hab, 70m², primera línea)
+9. Villa Golf, Murcia - 385.000€ (3 hab, 200m², campo de golf)
+10. Loft Moderno, Madrid - 320.000€ (1 hab, 65m², Malasaña)
 
 ## CUÁNDO USAR CADA HERRAMIENTA
 
 ### show_catalog - USAR cuando el usuario dice:
 - "Quiero ver propiedades/opciones/catálogo"
-- "¿Qué tienen disponible?"
-- "Muéstrame lo que tienen"
+- "¿Qué tenéis disponible?"
+- "Enséñame lo que tenéis"
 - "Dame los precios"
 - "¿Cuánto cuestan?"
 - Cualquier variación de querer VER opciones
 
 ### search_properties - USAR cuando el usuario ya especificó:
-- Una zona específica ("busco en Miraflores")
-- Un presupuesto concreto ("hasta 300 mil")
+- Una zona específica ("busco en Marbella")
+- Un presupuesto concreto ("hasta 300 mil euros")
 - Tipo de propiedad + criterios
 - Después de ver el catálogo y decir cuál le interesa
 
@@ -65,17 +70,18 @@ Si el usuario quiere ver propiedades, catálogo, opciones, precios o algo simila
 - 1-2 emojis por mensaje máximo
 - Sé específico y útil
 - Si no hay propiedades que coincidan, sugiere alternativas del catálogo
+- Usa español de España ("vale", "tenéis", etc.)
 
 ## EJEMPLOS DE BUENAS RESPUESTAS
 
-Usuario: "Quiero ver departamentos"
-Bot: [USA show_catalog] → "Aquí tienes nuestros departamentos disponibles... ¿Cuál te llama la atención?"
+Usuario: "Quiero ver apartamentos"
+Bot: [USA show_catalog] → "Aquí tienes nuestros apartamentos disponibles... ¿Cuál te llama la atención?"
 
 Usuario: "Dame los precios"  
 Bot: [USA show_catalog] → "Estos son nuestros precios actuales..."
 
 Usuario: "Busco algo económico"
-Bot: [USA show_catalog] → "Te muestro nuestras opciones. La más accesible es el departamento en Surco a $180,000..."
+Bot: [USA show_catalog] → "Te muestro nuestras opciones. La más accesible es el apartamento San Jacobo a 150.000€..."
 
 ## ERRORES A EVITAR
 ❌ NO pidas presupuesto antes de mostrar opciones
@@ -108,16 +114,16 @@ TOOLS = [
                 "properties": {
                     "zone": {
                         "type": "string",
-                        "description": "Zona específica mencionada (San Isidro, Miraflores, Surco, San Borja, La Molina)"
+                        "description": "Zona específica mencionada (Costa del Sol, Marbella, Valencia, Barcelona, Madrid, Alicante, Murcia, Segovia, Benidorm)"
                     },
                     "property_type": {
                         "type": "string",
-                        "enum": ["casa", "departamento"],
+                        "enum": ["casa", "apartamento", "villa", "ático", "loft"],
                         "description": "Tipo de propiedad especificado"
                     },
                     "max_price": {
                         "type": "integer",
-                        "description": "Presupuesto máximo en dólares SI lo mencionó"
+                        "description": "Presupuesto máximo en euros SI lo mencionó"
                     },
                     "min_bedrooms": {
                         "type": "integer",
@@ -152,19 +158,23 @@ TOOLS = [
     }
 ]
 
-
 def format_property_card(prop: dict, index: int = None, compact: bool = False) -> str:
     """Formatea una propiedad de forma atractiva."""
     prefix = f"{index}. " if index else ""
     
+    # Formato de precio según tipo (alquiler vs venta)
+    price_str = f"{prop['price']:,}€"
+    if prop.get('priceType') == 'mes' or prop.get('objective') == 'alquiler':
+        price_str = f"{prop['price']:,}€/mes" if prop['price'] < 10000 else f"{prop['price']:,}€"
+    
     if compact:
-        return f"{prefix}**{prop['title']}** - ${prop['price']:,} | {prop['bedrooms']} hab, {prop['area']}m²"
+        return f"{prefix}**{prop['title']}** - {price_str} | {prop['bedrooms']} hab, {prop['area']}m²"
     
     return f"""
-{prefix}🏠 **{prop['title']}**
-💵 ${prop['price']:,} USD
+{prefix}🏠 **{prop['title']}** ({prop.get('zone', 'España')})
+💶 {price_str}
 📐 {prop['area']}m² | 🛏️ {prop['bedrooms']} hab | 🚿 {prop['bathrooms']} baños
-✨ {prop['description'][:70]}...
+✨ {prop['description'][:80]}...
 🎯 {', '.join(prop['features'][:3])}
 """
 
@@ -176,29 +186,30 @@ def get_full_catalog() -> str:
     if not properties:
         return "No hay propiedades disponibles en este momento."
     
-    # Agrupar por tipo
-    deptos = [p for p in properties if p["type"] == "departamento"]
-    casas = [p for p in properties if p["type"] == "casa"]
+    # Agrupar por objetivo (venta vs alquiler)
+    venta = [p for p in properties if p.get("objective") == "venta"]
+    alquiler = [p for p in properties if p.get("objective") == "alquiler"]
     
-    result = "📋 **NUESTRAS PROPIEDADES DISPONIBLES**\n"
+    result = "📋 **NUESTRAS PROPIEDADES EN ESPAÑA**\n"
     result += "━" * 30 + "\n\n"
     
-    if deptos:
-        result += "🏢 **DEPARTAMENTOS:**\n"
-        for i, prop in enumerate(deptos, 1):
+    if venta:
+        result += "🏠 **EN VENTA:**\n"
+        for i, prop in enumerate(venta, 1):
             result += format_property_card(prop, index=i)
         result += "\n"
     
-    if casas:
-        result += "🏡 **CASAS:**\n"
-        for i, prop in enumerate(casas, len(deptos) + 1):
+    if alquiler:
+        result += "🔑 **EN ALQUILER:**\n"
+        for i, prop in enumerate(alquiler, len(venta) + 1):
             result += format_property_card(prop, index=i)
     
     result += "\n━" * 30 + "\n"
-    result += "💡 Precios desde $180,000 hasta $450,000\n"
+    result += "💡 Precios desde 150.000€ hasta 890.000€ (venta) | Alquileres desde 1.200€/mes\n"
     result += "¿Alguna te interesa? Puedo darte más detalles."
     
     return result
+
 
 
 def process_tool_calls(tool_calls: list, channel: str, session_id: str, 

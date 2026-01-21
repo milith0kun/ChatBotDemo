@@ -1,0 +1,206 @@
+/* ==================== Voice Recorder Styles ==================== */
+
+.voice-recorder {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Botón principal de voz */
+.voice-button {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    flex-shrink: 0;
+}
+
+.voice-button:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+
+.voice-button:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.voice-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Estado de grabación */
+.voice-button.recording {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    animation: pulse-recording 1.5s infinite;
+}
+
+@keyframes pulse-recording {
+    0%, 100% {
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 25px rgba(239, 68, 68, 0.6), 0 0 0 8px rgba(239, 68, 68, 0.1);
+    }
+}
+
+/* Estado de procesamiento */
+.voice-button.processing {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    cursor: wait;
+}
+
+/* Estado de reproducción */
+.voice-button.playing {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    animation: pulse-playing 1s infinite;
+}
+
+@keyframes pulse-playing {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Spinner de carga */
+.voice-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Indicador de grabación */
+.recording-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 20px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.recording-pulse {
+    width: 10px;
+    height: 10px;
+    background: #ef4444;
+    border-radius: 50%;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+.recording-time {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #ef4444;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Texto de procesamiento */
+.processing-text {
+    font-size: 0.875rem;
+    color: #f59e0b;
+    font-weight: 500;
+    animation: fade-pulse 1.5s infinite;
+}
+
+@keyframes fade-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Botón de detener reproducción */
+.stop-playback-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.stop-playback-btn:hover {
+    background: rgba(16, 185, 129, 0.2);
+}
+
+/* Mensaje de error */
+.voice-error {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+    color: #ef4444;
+    font-size: 0.75rem;
+    text-align: center;
+    animation: slide-up 0.3s ease;
+}
+
+@keyframes slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .voice-button {
+        width: 44px;
+        height: 44px;
+    }
+    
+    .voice-button svg {
+        width: 20px;
+        height: 20px;
+    }
+}

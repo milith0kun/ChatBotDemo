@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import Message, { TypingIndicator } from '../Message/Message.jsx';
+import VoiceRecorder from '../VoiceRecorder/VoiceRecorder.jsx';
 import { sendChatMessage } from '../../services/api';
 import './ChatInterface.css';
 
@@ -69,6 +70,7 @@ const ChatInterface = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [sessionId, setSessionId] = useState(null);
     const [error, setError] = useState(null);
+    const [isVoiceProcessing, setIsVoiceProcessing] = useState(false);
 
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
@@ -130,10 +132,41 @@ const ChatInterface = () => {
         handleSendMessage(action);
     };
 
+    // Manejar mensaje de voz
+    const handleVoiceMessage = ({ transcribedText, botResponse, sessionId: newSessionId, showAudioButton }) => {
+        if (!transcribedText || !botResponse) return;
+
+        // Actualizar session_id si es nuevo
+        if (newSessionId && !sessionId) {
+            setSessionId(newSessionId);
+        }
+
+        // Agregar mensaje del usuario (transcripción)
+        const userMessage = {
+            id: Date.now(),
+            content: transcribedText,
+            role: 'user',
+            timestamp: new Date(),
+            isVoice: true
+        };
+
+        // Agregar respuesta del bot
+        const botMessage = {
+            id: Date.now() + 1,
+            content: botResponse,
+            role: 'assistant',
+            timestamp: new Date(),
+            // Si la respuesta es larga, mostrar botón para escuchar
+            showAudioButton: showAudioButton
+        };
+
+        setMessages(prev => [...prev, userMessage, botMessage]);
+    };
+
     const quickActions = [
-        { icon: BuildingIcon, label: 'Busco un departamento', action: 'Busco un departamento' },
-        { icon: HouseIcon, label: 'Busco una casa', action: 'Busco una casa' },
-        { icon: MapPinIcon, label: 'Zonas disponibles', action: '¿Qué zonas tienen disponibles?' },
+        { icon: BuildingIcon, label: 'Busco un apartamento', action: 'Busco un apartamento' },
+        { icon: HouseIcon, label: 'Busco una villa', action: 'Busco una villa o casa' },
+        { icon: MapPinIcon, label: 'Ver zonas', action: '¿Qué zonas tenéis disponibles?' },
         { icon: DollarIcon, label: 'Ver precios', action: '¿Cuáles son los precios?' }
     ];
 
@@ -143,12 +176,12 @@ const ChatInterface = () => {
                 {/* Chat Header */}
                 <div className="chat-header">
                     <div className="chat-header-content">
-
                         <div className="chat-header-info">
-                            <h2>Asistente InmoBot</h2>
+                            <h2>InmoBot</h2>
+                            <p className="chat-subtitle">Asistente Inmobiliario</p>
                             <div className="chat-status">
                                 <span className="status-dot" />
-                                <span>En linea</span>
+                                <span>En línea</span>
                             </div>
                         </div>
                     </div>
@@ -162,8 +195,8 @@ const ChatInterface = () => {
 
                                 <h3>Bienvenido a InmoBot</h3>
                                 <p>
-                                    Tu asistente personal para encontrar la propiedad perfecta en Lima.
-                                    Estoy aqui para ayudarte las 24 horas.
+                                    Tu asistente personal para encontrar la propiedad perfecta en España.
+                                    Estoy aquí para ayudarte las 24 horas.
                                 </p>
                                 <div className="quick-actions-grid">
                                     {quickActions.map((item, index) => (
@@ -190,6 +223,8 @@ const ChatInterface = () => {
                                     content={message.content}
                                     role={message.role}
                                     timestamp={message.timestamp}
+                                    isVoice={message.isVoice}
+                                    showAudioButton={message.showAudioButton}
                                 />
                             ))}
                             {isLoading && <TypingIndicator />}
@@ -213,21 +248,28 @@ const ChatInterface = () => {
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder="Escribe tu mensaje aqui..."
+                            placeholder="Escribe o usa el micrófono 🎙️"
                             rows={1}
-                            disabled={isLoading}
+                            disabled={isLoading || isVoiceProcessing}
                         />
-                        <button
-                            className="send-button"
-                            onClick={() => handleSendMessage()}
-                            disabled={!inputValue.trim() || isLoading}
-                            aria-label="Enviar mensaje"
-                        >
-                            <SendIcon />
-                        </button>
+                        <div className="input-actions">
+                            <VoiceRecorder
+                                onVoiceMessage={handleVoiceMessage}
+                                sessionId={sessionId}
+                                disabled={isLoading}
+                            />
+                            <button
+                                className="send-button"
+                                onClick={() => handleSendMessage()}
+                                disabled={!inputValue.trim() || isLoading}
+                                aria-label="Enviar mensaje"
+                            >
+                                <SendIcon />
+                            </button>
+                        </div>
                     </div>
                     <p className="input-hint">
-                        Presiona Enter para enviar, Shift + Enter para nueva linea
+                        Enter para enviar • Shift+Enter nueva línea • 🎙️ Grabar voz
                     </p>
                 </div>
             </div>

@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form
+from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
@@ -8,6 +9,7 @@ from config import FRONTEND_URL, PORT
 from modules.ai_agent import process_message
 from modules.lead_manager import get_all_leads, load_properties, get_lead_by_id, create_or_update_lead
 from modules.telegram_bot import send_telegram_message, extract_message_data, set_webhook, get_webhook_info
+from modules.voice_handler import transcribe_audio, synthesize_speech, adapt_text_for_voice
 
 # Inicializar FastAPI
 app = FastAPI(
@@ -36,6 +38,9 @@ sessions = {}
 # Almacén de conversaciones de Telegram
 telegram_conversations = {}
 
+# Almacén de conversaciones de voz
+voice_sessions = {}
+
 
 # ==================== MODELOS ====================
 
@@ -54,6 +59,12 @@ class WebhookSetupRequest(BaseModel):
     webhook_url: str
 
 
+class VoiceSynthesisRequest(BaseModel):
+    text: str
+    voice: Optional[str] = "nova"
+    speed: Optional[float] = 1.0
+
+
 # ==================== ENDPOINTS ====================
 
 @app.get("/")
@@ -63,7 +74,7 @@ async def root():
         "status": "online",
         "service": "InmoBot API",
         "version": "1.0.0",
-        "channels": ["web", "telegram"]
+        "channels": ["web", "telegram", "voice"]
     }
 
 
@@ -222,6 +233,108 @@ async def get_telegram_webhook_info():
     """Obtiene información del webhook de Telegram."""
     result = await get_webhook_info()
     return result
+
+
+# ==================== ENDPOINTS DE VOZ ====================
+
+@app.post("/api/voice/transcribe")
+async def voice_transcribe(
+    audio: UploadFile = File(...),
+    session_id: str = Form(None)
+):
+    """
+    Transcribe audio a texto y procesa con IA.
+    Recibe archivo de audio, transcribe con Whisper, procesa con GPT.
+    """
+    try:
+        # Generar o usar session_id existente
+        session_id = session_id or str(uuid.uuid4())
+        
+        # Transcribir audio
+        transcribed_text = await transcribe_audio(audio)
+        
+        if not transcribed_text or not transcribed_text.strip():
+            return {
+                "error": "No se pudo transcribir el audio. Intenta de nuevo.",
+                "transcribed_text": "",
+                "bot_response": "",
+                "session_id": session_id
+            }
+        
+        # Obtener o crear historial de conversación de voz
+        if session_id not in voice_sessions:
+            voice_sessions[session_id] = []
+        
+        conversation_history = voice_sessions[session_id]
+        
+        # Procesar mensaje con IA (misma lógica que chat web)
+        response, updated_history, lead_data = await process_message(
+            message=transcribed_text,
+            conversation_history=conversation_history,
+            channel="voice",
+            session_id=session_id
+        )
+        
+        # Actualizar historial
+        voice_sessions[session_id] = updated_history
+        
+        # Crear o actualizar lead con canal "voice"
+        create_or_update_lead(
+            channel="voice",
+            session_id=session_id,
+            lead_data=lead_data or {},
+            conversation_history=updated_history
+        )
+        
+        return {
+            "transcribed_text": transcribed_text,
+            "bot_response": response,
+            "session_id": session_id,
+            "lead_data": lead_data
+        }
+        
+    except Exception as e:
+        print(f"Error en voice_transcribe: {str(e)}")
+        return {
+            "error": f"Error al procesar audio: {str(e)}",
+            "transcribed_text": "",
+            "bot_response": "",
+            "session_id": session_id
+        }
+
+
+@app.post("/api/voice/synthesize")
+async def voice_synthesize(request: VoiceSynthesisRequest):
+    """
+    Convierte texto a audio usando TTS de OpenAI.
+    Retorna archivo MP3.
+    """
+    try:
+        if not request.text or not request.text.strip():
+            raise HTTPException(status_code=400, detail="El texto no puede estar vacío")
+        
+        # Adaptar texto para voz (convertir símbolos a palabras)
+        adapted_text = adapt_text_for_voice(request.text, "voice")
+        
+        # Sintetizar audio
+        audio_content = synthesize_speech(
+            text=adapted_text,
+            voice=request.voice,
+            speed=request.speed
+        )
+        
+        return Response(
+            content=audio_content,
+            media_type="audio/mpeg",
+            headers={
+                "Content-Disposition": "attachment; filename=response.mp3",
+                "Cache-Control": "no-cache"
+            }
+        )
+        
+    except Exception as e:
+        print(f"Error en voice_synthesize: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al sintetizar audio: {str(e)}")
 
 
 # ==================== MAIN ====================

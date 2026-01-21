@@ -108,6 +108,67 @@
     opacity: 1;
 }
 
+/* Voice indicator */
+.voice-indicator {
+    margin-right: 4px;
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+/* Audio play button for long responses */
+.audio-play-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    background: linear-gradient(135deg, var(--primary-glow) 0%, rgba(13, 79, 79, 0.1) 100%);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-full);
+    color: var(--primary);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--duration-normal) var(--ease-out-expo);
+}
+
+.audio-play-btn:hover:not(:disabled) {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.audio-play-btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.audio-play-btn.playing {
+    background: var(--error-bg);
+    border-color: var(--error);
+    color: var(--error);
+}
+
+.audio-play-btn.playing:hover:not(:disabled) {
+    background: var(--error);
+    color: white;
+}
+
+.audio-play-btn .audio-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* ==================== TYPING INDICATOR ==================== */
 .typing-bubble {
     padding: var(--space-4);

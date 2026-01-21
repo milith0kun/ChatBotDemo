@@ -1,15 +1,58 @@
+import { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { getVoiceResponse } from '../../services/api';
 import './Message.css';
 
-const Message = ({ content, role, timestamp }) => {
+const Message = ({ content, role, timestamp, isVoice = false, showAudioButton = false }) => {
     const isUser = role === 'user';
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+    const audioRef = useRef(null);
 
     // Formatear hora
     const formatTime = (date) => {
-        return new Date(date).toLocaleTimeString('es-PE', {
+        return new Date(date).toLocaleTimeString('es-ES', {
             hour: '2-digit',
             minute: '2-digit'
         });
+    };
+
+    // Reproducir audio de la respuesta
+    const handlePlayAudio = async () => {
+        if (isPlaying) {
+            // Detener si ya está reproduciendo
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
+            setIsPlaying(false);
+            return;
+        }
+
+        setIsLoadingAudio(true);
+        try {
+            const audioBlob = await getVoiceResponse(content);
+            const audioUrl = URL.createObjectURL(audioBlob);
+
+            const audio = new Audio(audioUrl);
+            audioRef.current = audio;
+
+            audio.onplay = () => setIsPlaying(true);
+            audio.onended = () => {
+                setIsPlaying(false);
+                URL.revokeObjectURL(audioUrl);
+            };
+            audio.onerror = () => {
+                setIsPlaying(false);
+                setIsLoadingAudio(false);
+            };
+
+            await audio.play();
+        } catch (err) {
+            console.error('Error reproduciendo audio:', err);
+        } finally {
+            setIsLoadingAudio(false);
+        }
     };
 
     return (
@@ -40,8 +83,27 @@ const Message = ({ content, role, timestamp }) => {
                             {content}
                         </ReactMarkdown>
                     )}
+
+                    {/* Botón de reproducción para respuestas largas */}
+                    {showAudioButton && !isUser && (
+                        <button
+                            className={`audio-play-btn ${isPlaying ? 'playing' : ''} ${isLoadingAudio ? 'loading' : ''}`}
+                            onClick={handlePlayAudio}
+                            disabled={isLoadingAudio}
+                            title={isPlaying ? 'Detener audio' : 'Escuchar respuesta'}
+                        >
+                            {isLoadingAudio ? (
+                                <span className="audio-spinner">⏳</span>
+                            ) : isPlaying ? (
+                                <span>⏹️ Detener</span>
+                            ) : (
+                                <span>🔊 Escuchar</span>
+                            )}
+                        </button>
+                    )}
                 </div>
                 <span className="message-time">
+                    {isVoice && <span className="voice-indicator" title="Mensaje de voz">🎤</span>}
                     {formatTime(timestamp)}
                 </span>
             </div>

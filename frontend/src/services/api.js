@@ -85,4 +85,50 @@ export const checkHealth = async () => {
     }
 };
 
+/**
+ * Envía audio grabado al backend para transcripción y procesamiento
+ * @param {Blob} audioBlob - Blob de audio grabado
+ * @param {string|null} sessionId - ID de sesión existente
+ * @returns {Promise<{transcribed_text: string, bot_response: string, session_id: string}>}
+ */
+export const sendVoiceMessage = async (audioBlob, sessionId = null) => {
+    try {
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'recording.webm');
+        if (sessionId) {
+            formData.append('session_id', sessionId);
+        }
+
+        const response = await axios.post(`${API_URL}/api/voice/transcribe`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error sending voice message:', error);
+        throw error;
+    }
+};
+
+/**
+ * Obtiene audio sintetizado del texto de respuesta
+ * @param {string} text - Texto a sintetizar
+ * @returns {Promise<Blob>} - Blob de audio MP3
+ */
+export const getVoiceResponse = async (text) => {
+    try {
+        const response = await axios.post(
+            `${API_URL}/api/voice/synthesize`,
+            { text },
+            { responseType: 'blob' }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error getting voice response:', error);
+        throw error;
+    }
+};
+
 export default api;
+
