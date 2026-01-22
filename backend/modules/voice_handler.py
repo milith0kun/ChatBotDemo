@@ -95,14 +95,14 @@ async def transcribe_audio_deepgram(audio_file) -> str:
             "tier": "enhanced"  # Usar tier enhanced para mejor precisión y velocidad
         }
         
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=10.0) as client:  # Timeout agresivo de 10s
             with open(temp_path, "rb") as audio:
                 response = await client.post(
                     DEEPGRAM_STT_URL,
                     headers=headers,
                     params=params,
                     content=audio.read(),
-                    timeout=15.0  # Reducido de 30 a 15 segundos
+                    timeout=10.0  # Reducido a 10 segundos para respuesta m\u00e1s r\u00e1pida
                 )
         
         if response.status_code == 200:

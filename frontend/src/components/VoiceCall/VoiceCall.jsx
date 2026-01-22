@@ -77,10 +77,11 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
     }, [callState]);
 
     // Configuración ULTRA-RÁPIDA para respuesta inmediata
-    const SILENCE_THRESHOLD = 0.030;  // Umbral ajustado para filtrar ruido ambiental (0.022-0.024)
-    const SILENCE_DURATION = 350;     // 0.35 segundos - RESPUESTA RELÁMPAGO
+    const SILENCE_THRESHOLD = 0.035;  // Umbral aumentado para filtrar ruido ambiental (0.026-0.030)
+    const SILENCE_DURATION = 400;     // 0.4 segundos - balance entre velocidad y precisión
     const MAX_CALL_DURATION = 300;
     const CHECK_INTERVAL = 50;        // Revisar cada 50ms para máxima velocidad
+    const MAX_LISTENING_TIME = 10000; // 10 segundos máximo escuchando sin habla
 
     // Temporizador de duración
     useEffect(() => {
@@ -305,13 +306,15 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
         const dataArray = new Uint8Array(bufferLength);
         let silenceStart = null;
         let hasSpoken = false;
-        let consecutiveSpeechChecks = 0;  // Contador para evitar falsos positivos de ruido
-        const SPEECH_CHECKS_REQUIRED = 2;  // Solo 2 checks para respuesta más rápida
+        let consecutiveSpeechChecks = 0;
+        let consecutiveSilenceChecks = 0;
+        const SPEECH_CHECKS_REQUIRED = 3;  // 3 checks consecutivos para confirmar habla (150ms)
+        const SILENCE_CHECKS_REQUIRED = 3;  // 3 checks consecutivos para confirmar silencio (150ms)
+        const listeningStartTime = Date.now();
 
         const checkSilence = () => {
             // Verificar que aún debemos estar escuchando
             if (callStateRef.current !== CALL_STATES.LISTENING) {
-                console.log(`🛑 No estamos en LISTENING (${callStateRef.current}), deteniendo detección`);
                 if (silenceTimerRef.current) {
                     clearInterval(silenceTimerRef.current);
                     silenceTimerRef.current = null;
@@ -320,11 +323,18 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
             }
 
             if (!mediaRecorderRef.current || mediaRecorderRef.current.state !== 'recording') {
-                console.log('🛑 MediaRecorder no está grabando, deteniendo detección');
                 if (silenceTimerRef.current) {
                     clearInterval(silenceTimerRef.current);
                     silenceTimerRef.current = null;
                 }
+                return;
+            }
+
+            // Timeout: si lleva más de 10s escuchando sin hablar, procesar de todas formas
+            const listeningDuration = Date.now() - listeningStartTime;
+            if (!hasSpoken && listeningDuration > MAX_LISTENING_TIME) {
+                console.log('⏱️ Timeout: 10s sin habla, procesando...');
+                stopListening();
                 return;
             }
 
@@ -333,12 +343,11 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
 
             if (average > SILENCE_THRESHOLD) {
                 consecutiveSpeechChecks++;
+                consecutiveSilenceChecks = 0;  // Resetear contador de silencio
 
                 // Solo considerar que está hablando después de varios checks consecutivos
-                if (consecutiveSpeechChecks >= SPEECH_CHECKS_REQUIRED) {
-                    if (!hasSpoken) {
-                        console.log(`🗣️ Usuario comenzó a hablar (nivel: ${average.toFixed(4)})`);
-                    }
+                if (consecutiveSpeechChecks >= SPEECH_CHECKS_REQUIRED && !hasSpoken) {
+                    console.log(`🗣️ Usuario comenzó a hablar (nivel: ${average.toFixed(4)})`);
                     hasSpoken = true;
                     silenceStart = null;
                 }
@@ -346,12 +355,15 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
                 consecutiveSpeechChecks = 0;  // Resetear contador de habla
 
                 if (hasSpoken) {
-                    if (!silenceStart) {
+                    consecutiveSilenceChecks++;
+
+                    // Solo marcar inicio de silencio después de confirmación
+                    if (consecutiveSilenceChecks >= SILENCE_CHECKS_REQUIRED && !silenceStart) {
                         silenceStart = Date.now();
-                        console.log(`🤫 Silencio detectado (nivel: ${average.toFixed(4)})`);
-                    } else {
+                        console.log(`🤫 Silencio confirmado (nivel: ${average.toFixed(4)})`);
+                    } else if (silenceStart) {
                         const silenceDuration = Date.now() - silenceStart;
-                        if (silenceDuration > SILENCE_DURATION) {
+                        if (silenceDuration >= SILENCE_DURATION) {
                             console.log(`✅ Silencio completo (${silenceDuration}ms), procesando...`);
                             stopListening();
                         }

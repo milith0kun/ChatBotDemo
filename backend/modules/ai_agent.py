@@ -400,9 +400,9 @@ async def process_message(
     # OPTIMIZACIÓN PARA VOZ: Usar configuración MÁS rápida y concisa
     is_voice = channel == "voice"
     system_prompt = VOICE_SYSTEM_PROMPT if is_voice else SYSTEM_PROMPT
-    max_tokens_first = 120 if is_voice else 800  # Reducido de 150 a 120
-    max_tokens_second = 80 if is_voice else 600  # Reducido de 100 a 80
-    temperature = 0.5 if is_voice else 0.8  # Más predecible y rápido
+    max_tokens_first = 100 if is_voice else 800  # Reducido a 100 para respuestas ultra-cortas
+    max_tokens_second = 60 if is_voice else 600  # Reducido a 60
+    temperature = 0.4 if is_voice else 0.8  # Más predecible y rápido (0.5 → 0.4)
 
     messages = [{"role": "system", "content": system_prompt}] + conversation_history
 
@@ -413,7 +413,8 @@ async def process_message(
             tools=TOOLS,
             tool_choice="auto",
             max_tokens=max_tokens_first,
-            temperature=temperature
+            temperature=temperature,
+            timeout=8.0  # Timeout de 8 segundos para respuesta rápida
         )
         
         assistant_message = response.choices[0].message
@@ -454,7 +455,8 @@ async def process_message(
                 model=MODEL,
                 messages=messages,
                 max_tokens=max_tokens_second,
-                temperature=temperature
+                temperature=temperature,
+                timeout=8.0  # Timeout de 8 segundos
             )
             
             bot_response = final_response.choices[0].message.content

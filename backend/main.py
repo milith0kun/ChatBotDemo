@@ -332,12 +332,22 @@ async def voice_transcribe(
 
         # Procesar mensaje con IA
         gpt_start = time.time()
-        response, updated_history, lead_data = await process_message(
-            message=transcribed_text,
-            conversation_history=conversation_history,
-            channel="voice",
-            session_id=session_id
-        )
+        try:
+            response, updated_history, lead_data = await asyncio.wait_for(
+                process_message(
+                    message=transcribed_text,
+                    conversation_history=conversation_history,
+                    channel="voice",
+                    session_id=session_id
+                ),
+                timeout=12.0  # Timeout total de 12 segundos para GPT
+            )
+        except asyncio.TimeoutError:
+            print("[ERROR] Timeout en process_message (>12s)")
+            response = "Disculpa, tardé mucho. ¿Puedes repetir?"
+            updated_history = conversation_history
+            lead_data = {}
+        
         gpt_time = time.time() - gpt_start
         print(f"[GPT] Tiempo: {gpt_time:.2f}s")
 
