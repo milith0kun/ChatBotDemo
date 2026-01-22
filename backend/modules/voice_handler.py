@@ -359,6 +359,8 @@ def adapt_text_for_voice(text: str, channel: str = "voice") -> str:
         "hab": " habitaciones",
         "habitación": " ha-bi-ta-ción",  # Separación silábica para mejor pronunciación
         "habitaciones": " ha-bi-ta-cio-nes",  # Separación silábica
+        "ayudarte": " a-yu-dar-te",  # Mejor pronunciación
+        "puedo": " pue-do",  # Evita pronunciación rápida
         "nº": " número",
         "Nº": " número",
         "°": " grados",
