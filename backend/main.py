@@ -245,14 +245,21 @@ async def voice_transcribe(
     """
     Transcribe audio a texto y procesa con IA.
     Recibe archivo de audio, transcribe con Whisper, procesa con GPT.
+    OPTIMIZADO PARA VELOCIDAD.
     """
+    import time
+    start_time = time.time()
+
     try:
         # Generar o usar session_id existente
         session_id = session_id or str(uuid.uuid4())
-        
+
         # Transcribir audio
+        stt_start = time.time()
         transcribed_text = await transcribe_audio(audio)
-        
+        stt_time = time.time() - stt_start
+        print(f"[STT] Tiempo: {stt_time:.2f}s")
+
         if not transcribed_text or not transcribed_text.strip():
             return {
                 "error": "No se pudo transcribir el audio. Intenta de nuevo.",
@@ -260,41 +267,53 @@ async def voice_transcribe(
                 "bot_response": "",
                 "session_id": session_id
             }
-        
+
         # Obtener o crear historial de conversación de voz
         if session_id not in voice_sessions:
             voice_sessions[session_id] = []
-        
+
         conversation_history = voice_sessions[session_id]
-        
-        # Procesar mensaje con IA (misma lógica que chat web)
+
+        # Procesar mensaje con IA
+        gpt_start = time.time()
         response, updated_history, lead_data = await process_message(
             message=transcribed_text,
             conversation_history=conversation_history,
             channel="voice",
             session_id=session_id
         )
-        
+        gpt_time = time.time() - gpt_start
+        print(f"[GPT] Tiempo: {gpt_time:.2f}s")
+
         # Actualizar historial
         voice_sessions[session_id] = updated_history
-        
-        # Crear o actualizar lead con canal "voice"
-        create_or_update_lead(
-            channel="voice",
-            session_id=session_id,
-            lead_data=lead_data or {},
-            conversation_history=updated_history
-        )
-        
+
+        # Crear o actualizar lead (sin bloquear la respuesta)
+        # Ejecutar en background para no añadir latencia
+        try:
+            create_or_update_lead(
+                channel="voice",
+                session_id=session_id,
+                lead_data=lead_data or {},
+                conversation_history=updated_history
+            )
+        except Exception as lead_error:
+            print(f"Error guardando lead (no crítico): {lead_error}")
+
+        total_time = time.time() - start_time
+        print(f"[TOTAL] Tiempo: {total_time:.2f}s | Transcrito: '{transcribed_text}' | Respuesta: '{response[:50]}...'")
+
         return {
             "transcribed_text": transcribed_text,
             "bot_response": response,
             "session_id": session_id,
             "lead_data": lead_data
         }
-        
+
     except Exception as e:
-        print(f"Error en voice_transcribe: {str(e)}")
+        print(f"[ERROR] Error en voice_transcribe: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return {
             "error": f"Error al procesar audio: {str(e)}",
             "transcribed_text": "",
@@ -306,23 +325,29 @@ async def voice_transcribe(
 @app.post("/api/voice/synthesize")
 async def voice_synthesize(request: VoiceSynthesisRequest):
     """
-    Convierte texto a audio usando TTS de OpenAI.
-    Retorna archivo MP3.
+    Convierte texto a audio usando TTS.
+    Retorna archivo MP3. OPTIMIZADO PARA VELOCIDAD.
     """
+    import time
+    start_time = time.time()
+
     try:
         if not request.text or not request.text.strip():
             raise HTTPException(status_code=400, detail="El texto no puede estar vacío")
-        
+
         # Adaptar texto para voz (convertir símbolos a palabras)
         adapted_text = adapt_text_for_voice(request.text, "voice")
-        
+
         # Sintetizar audio
         audio_content = synthesize_speech(
             text=adapted_text,
             voice=request.voice,
-            speed=request.speed
+            speed=request.speed or 1.0  # Velocidad normal para audio natural
         )
-        
+
+        tts_time = time.time() - start_time
+        print(f"[TTS] Tiempo: {tts_time:.2f}s | Texto: '{request.text[:50]}...'")
+
         return Response(
             content=audio_content,
             media_type="audio/mpeg",
@@ -331,9 +356,9 @@ async def voice_synthesize(request: VoiceSynthesisRequest):
                 "Cache-Control": "no-cache"
             }
         )
-        
+
     except Exception as e:
-        print(f"Error en voice_synthesize: {str(e)}")
+        print(f"[ERROR] Error en voice_synthesize: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error al sintetizar audio: {str(e)}")
 
 

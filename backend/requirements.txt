@@ -5,3 +5,5 @@ openai==1.12.0
 httpx==0.26.0
 pydantic==2.5.3
 python-multipart==0.0.6
+deepgram-sdk==3.5.0
+websockets==13.0

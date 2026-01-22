@@ -168,6 +168,29 @@
     opacity: 1;
 }
 
+/* ==================== CALL LINK ==================== */
+.call-link {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: #059669 !important;
+}
+
+.call-link:hover {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.call-link.active {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white !important;
+}
+
+.call-link.active::after {
+    display: none;
+}
+
 /* ==================== MOBILE MENU ==================== */
 .mobile-menu-btn {
     display: none;

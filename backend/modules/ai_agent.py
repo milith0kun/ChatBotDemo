@@ -11,6 +11,43 @@ client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 # Modelo a usar
 MODEL = "gpt-4o-mini"
 
+# System prompt para LLAMADAS DE VOZ - MÁS CORTO Y DIRECTO
+VOICE_SYSTEM_PROMPT = """Eres InmoBot, un asesor inmobiliario por teléfono. Hablas de forma natural y concisa.
+
+## ESTILO DE VOZ
+- Respuestas MUY CORTAS (máximo 2-3 oraciones)
+- Sin emojis (no se escuchan por teléfono)
+- Directo al grano
+- Tono amigable pero profesional
+
+## CATÁLOGO (precios: 150.000€ - 890.000€)
+1. Villa Paraíso, Costa del Sol - 200.000€ (2 hab, 85m²)
+2. Villa María, Alicante - 450.000€ (3 hab, 180m², piscina)
+3. San Jacobo, Costa Blanca - 150.000€ (1 hab, alquiler)
+4. Chalet Mediterráneo, Marbella - 890.000€ (4 hab, lujo)
+5. Apartamento Centro, Valencia - 280.000€ (2 hab, reformado)
+6. Casa Rural, Segovia - 195.000€ (3 hab, chimenea)
+7. Penthouse Barcelona - 650.000€ (3 hab, terraza 80m²)
+8. Apartamento Playa, Benidorm - 1.200€/mes (primera línea)
+9. Villa Golf, Murcia - 385.000€ (campo de golf)
+10. Loft Madrid - 320.000€ (Malasaña)
+
+## HERRAMIENTAS
+- show_catalog: Si pide ver propiedades
+- search_properties: Si da criterios específicos
+- save_lead_info: Si da nombre/teléfono
+
+## EJEMPLOS
+Usuario: "Hola"
+Tú: "Hola, soy InmoBot. ¿Buscas comprar o alquilar?"
+
+Usuario: "Quiero ver opciones"
+Tú: [USA show_catalog] "Te envío nuestro catálogo completo. ¿Alguna te interesa?"
+
+Usuario: "Busco en Marbella"
+Tú: [USA search_properties] "Tengo el Chalet Mediterráneo en Marbella por 890 mil euros. ¿Te interesa?"
+"""
+
 # System prompt mejorado - Más flexible y natural
 SYSTEM_PROMPT = """Eres InmoBot, un asesor inmobiliario virtual amigable especializado en propiedades en España.
 
@@ -287,26 +324,33 @@ async def process_message(
     telegram_username: Optional[str] = None
 ) -> tuple[str, list, dict]:
     """Procesa un mensaje del usuario y genera una respuesta."""
-    
+
     if not client:
         return "Lo siento, el servicio no está disponible. Intenta más tarde.", conversation_history, {}
-    
+
     # Agregar mensaje al historial
     conversation_history.append({
         "role": "user",
         "content": message
     })
-    
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + conversation_history
-    
+
+    # OPTIMIZACIÓN PARA VOZ: Usar configuración MÁS rápida y concisa
+    is_voice = channel == "voice"
+    system_prompt = VOICE_SYSTEM_PROMPT if is_voice else SYSTEM_PROMPT
+    max_tokens_first = 120 if is_voice else 800  # Reducido de 150 a 120
+    max_tokens_second = 80 if is_voice else 600  # Reducido de 100 a 80
+    temperature = 0.5 if is_voice else 0.8  # Más predecible y rápido
+
+    messages = [{"role": "system", "content": system_prompt}] + conversation_history
+
     try:
         response = client.chat.completions.create(
             model=MODEL,
             messages=messages,
             tools=TOOLS,
             tool_choice="auto",
-            max_tokens=800,
-            temperature=0.8
+            max_tokens=max_tokens_first,
+            temperature=temperature
         )
         
         assistant_message = response.choices[0].message
@@ -341,13 +385,13 @@ async def process_message(
                 conversation_history.append(result)
             
             # Segunda llamada para respuesta final
-            messages = [{"role": "system", "content": SYSTEM_PROMPT}] + conversation_history
-            
+            messages = [{"role": "system", "content": system_prompt}] + conversation_history
+
             final_response = client.chat.completions.create(
                 model=MODEL,
                 messages=messages,
-                max_tokens=600,
-                temperature=0.7
+                max_tokens=max_tokens_second,
+                temperature=temperature
             )
             
             bot_response = final_response.choices[0].message.content

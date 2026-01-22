@@ -6,6 +6,12 @@ load_dotenv()
 # OpenAI Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
+# Deepgram Configuration (API más económica para voz)
+DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY", "")
+
+# Seleccionar proveedor de voz (deepgram es más barato)
+VOICE_PROVIDER = os.getenv("VOICE_PROVIDER", "deepgram")  # "deepgram" o "openai"
+
 # Telegram Configuration
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(npm run dev:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill /PID 21248 /F)",
+      "Bash(cmd.exe /c \"taskkill /PID 21248 /F\")",
+      "Bash(powershell -Command \"Get-Process python* | Stop-Process -Force\")",
+      "Bash(curl:*)"
+    ]
+  }
+}

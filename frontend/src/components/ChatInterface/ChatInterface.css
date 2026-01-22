@@ -482,3 +482,69 @@
         height: 32px;
     }
 }
+
+/* ==================== FLOATING CALL BUTTON ==================== */
+.floating-call-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 4px 20px rgba(16, 185, 129, 0.4),
+        0 0 40px rgba(16, 185, 129, 0.2);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.floating-call-btn:hover {
+    transform: scale(1.1);
+    box-shadow:
+        0 6px 30px rgba(16, 185, 129, 0.5),
+        0 0 60px rgba(16, 185, 129, 0.3);
+}
+
+.floating-call-btn svg {
+    width: 28px;
+    height: 28px;
+}
+
+@keyframes pulseGlow {
+
+    0%,
+    100% {
+        box-shadow:
+            0 4px 20px rgba(16, 185, 129, 0.4),
+            0 0 40px rgba(16, 185, 129, 0.2);
+    }
+
+    50% {
+        box-shadow:
+            0 4px 25px rgba(16, 185, 129, 0.5),
+            0 0 50px rgba(16, 185, 129, 0.3);
+    }
+}
+
+/* Hide floating button on mobile */
+@media (max-width: 768px) {
+    .floating-call-btn {
+        bottom: 100px;
+        right: 16px;
+        width: 52px;
+        height: 52px;
+    }
+
+    .floating-call-btn svg {
+        width: 24px;
+        height: 24px;
+    }
+}
