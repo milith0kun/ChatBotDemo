@@ -155,8 +155,8 @@ body {
   font-family: var(--font-body);
   font-size: var(--text-base);
   font-weight: 400;
-  color: var(--text-primary);
-  background: var(--surface-secondary);
+  color: #1a1a1a !important;
+  background: #ffffff !important;
   line-height: var(--leading-normal);
   min-height: 100vh;
   overflow-x: hidden;
@@ -167,9 +167,7 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, var(--primary-glow), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 100%, var(--accent-glow), transparent);
+  background: #ffffff !important;
   pointer-events: none;
   z-index: -1;
 }
@@ -178,6 +176,7 @@ body::before {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: #ffffff !important;
 }
 
 /* ==================== TYPOGRAPHY ==================== */

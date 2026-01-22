@@ -42,6 +42,21 @@ telegram_conversations = {}
 voice_sessions = {}
 
 
+# ==================== UTILIDADES ====================
+
+async def save_lead_async(session_id: str, lead_data: dict, conversation_history: list):
+    """Guarda el lead de forma asíncrona sin bloquear la respuesta"""
+    try:
+        create_or_update_lead(
+            channel="voice",
+            session_id=session_id,
+            lead_data=lead_data or {},
+            conversation_history=conversation_history
+        )
+    except Exception as lead_error:
+        print(f"Error guardando lead (no crítico): {lead_error}")
+
+
 # ==================== MODELOS ====================
 
 class ChatRequest(BaseModel):
@@ -252,7 +267,11 @@ async def voice_transcribe(
 
     try:
         # Generar o usar session_id existente
+        received_session_id = session_id
         session_id = session_id or str(uuid.uuid4())
+        
+        # DEBUG: Ver si recibimos session_id
+        print(f"[SESSION] Recibido: {received_session_id} | Usando: {session_id}")
 
         # Transcribir audio
         stt_start = time.time()
@@ -268,9 +287,45 @@ async def voice_transcribe(
                 "session_id": session_id
             }
 
+        # FILTRO DE RUIDO: Ignorar texto que parece ser ruido ambiental
+        noise_patterns = [
+            "gracias por ver",
+            "suscríbete",
+            "subtítulos",
+            "amara.org",
+            "like",
+            "subscribe",
+            "channel",
+            "video",
+            "comunidad",
+            "realizado por",
+            "transcripción",
+        ]
+        
+        text_lower = transcribed_text.lower()
+        is_noise = any(pattern in text_lower for pattern in noise_patterns)
+        
+        if is_noise:
+            print(f"[FILTRO] Ruido detectado, ignorando: '{transcribed_text}'")
+            return {
+                "transcribed_text": transcribed_text,
+                "bot_response": "",
+                "session_id": session_id,
+                "filtered": True
+            }
+
         # Obtener o crear historial de conversación de voz
         if session_id not in voice_sessions:
-            voice_sessions[session_id] = []
+            # Agregar saludo inicial al historial para que GPT sepa que ya saludó
+            voice_sessions[session_id] = [
+                {
+                    "role": "assistant",
+                    "content": "Hola, soy InmoBot. ¿En qué puedo ayudarte?"
+                }
+            ]
+            print(f"[SESSION] Nueva sesión creada con saludo inicial: {session_id}")
+        else:
+            print(f"[SESSION] Sesión existente con {len(voice_sessions[session_id])} mensajes")
 
         conversation_history = voice_sessions[session_id]
 
@@ -288,17 +343,9 @@ async def voice_transcribe(
         # Actualizar historial
         voice_sessions[session_id] = updated_history
 
-        # Crear o actualizar lead (sin bloquear la respuesta)
-        # Ejecutar en background para no añadir latencia
-        try:
-            create_or_update_lead(
-                channel="voice",
-                session_id=session_id,
-                lead_data=lead_data or {},
-                conversation_history=updated_history
-            )
-        except Exception as lead_error:
-            print(f"Error guardando lead (no crítico): {lead_error}")
+        # Crear o actualizar lead EN BACKGROUND (sin esperar)
+        import asyncio
+        asyncio.create_task(save_lead_async(session_id, lead_data, updated_history))
 
         total_time = time.time() - start_time
         print(f"[TOTAL] Tiempo: {total_time:.2f}s | Transcrito: '{transcribed_text}' | Respuesta: '{response[:50]}...'")

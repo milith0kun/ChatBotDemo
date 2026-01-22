@@ -35,13 +35,7 @@ const MicOffIcon = () => (
     </svg>
 );
 
-const VolumeIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-        <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-    </svg>
-);
+
 
 // Estados de la llamada
 const CALL_STATES = {
@@ -60,7 +54,6 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
     const [currentTranscript, setCurrentTranscript] = useState('');
     const [botResponse, setBotResponse] = useState('');
     const [error, setError] = useState(null);
-    const [currentSessionId, setCurrentSessionId] = useState(initialSessionId || null);
     const [processingStep, setProcessingStep] = useState('');
 
     // Referencias
@@ -74,6 +67,8 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
     const audioContextRef = useRef(null);
     const isProcessingRef = useRef(false);
     const callStateRef = useRef(CALL_STATES.IDLE);
+    // IMPORTANTE: useRef para sessionId para que siempre tenga el valor actualizado
+    const sessionIdRef = useRef(initialSessionId || null);
 
     // Sincronizar callStateRef con callState
     useEffect(() => {
@@ -81,11 +76,11 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
         console.log(`🔄 Estado cambiado a: ${callState}`);
     }, [callState]);
 
-    // Configuración OPTIMIZADA
-    const SILENCE_THRESHOLD = 0.03;   // Menos sensible al ruido ambiental (aumentado de 0.015)
-    const SILENCE_DURATION = 800;     // 0.8 segundos - detección más rápida
+    // Configuración OPTIMIZADA para respuesta rápida
+    const SILENCE_THRESHOLD = 0.02;   // Umbral ajustado para mejor detección
+    const SILENCE_DURATION = 600;     // 0.6 segundos - respuesta MUY rápida
     const MAX_CALL_DURATION = 300;
-    const CHECK_INTERVAL = 100;
+    const CHECK_INTERVAL = 80;        // Revisar cada 80ms para detección más rápida
 
     // Temporizador de duración
     useEffect(() => {
@@ -379,6 +374,7 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
         }
 
         console.log('⚙️ Procesando audio...');
+        console.log('📋 Session ID actual:', sessionIdRef.current);
         isProcessingRef.current = true;
 
         try {
@@ -388,7 +384,7 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
                 setTimeout(() => reject(new Error('Timeout')), 30000)
             );
 
-            const responsePromise = sendVoiceMessage(audioBlob, currentSessionId);
+            const responsePromise = sendVoiceMessage(audioBlob, sessionIdRef.current);
             const response = await Promise.race([responsePromise, timeoutPromise]);
 
             if (response.error) {
@@ -407,7 +403,10 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
             });
 
             setProcessingStep('Generando respuesta...');
-            if (response.session_id) setCurrentSessionId(response.session_id);
+            if (response.session_id) {
+                console.log('📥 Nuevo Session ID recibido:', response.session_id);
+                sessionIdRef.current = response.session_id;
+            }
             setCurrentTranscript(response.transcribed_text || '');
             setBotResponse(response.bot_response || '');
 
@@ -422,6 +421,13 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
             if (response.bot_response) {
                 setProcessingStep('Preparando audio...');
                 await playBotResponse(response.bot_response);
+            } else if (response.filtered) {
+                // El backend filtró ruido ambiental
+                console.log('🔇 Ruido ambiental filtrado, volviendo a escuchar');
+                setProcessingStep('');
+                isProcessingRef.current = false;
+                setCallState(CALL_STATES.LISTENING);
+                setTimeout(() => startListening(), 300);
             } else {
                 console.log('⚠️ Sin respuesta del bot, volviendo a escuchar');
                 setProcessingStep('');
@@ -576,85 +582,116 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
 
     const stateInfo = getStateInfo();
 
+    // Agregar clase de estado al container
+    const containerClass = `voice-call-container state-${callState}`;
+
     return (
-        <div className="voice-call-container">
-            <div className="voice-call-bg" />
-
-            <div className={`voice-call-avatar ${callState}`}>
-                <div className="avatar-ring ring-1" />
-                <div className="avatar-ring ring-2" />
-                <div className="avatar-ring ring-3" />
-                <div className="avatar-icon">🏠</div>
-            </div>
-
-            <div className="voice-call-info">
-                <h2>InmoBot</h2>
-                <p className="call-status" style={{ color: stateInfo.color }}>{stateInfo.text}</p>
-                {callState !== CALL_STATES.IDLE && callState !== CALL_STATES.ENDED && (
-                    <p className="call-duration">{formatDuration(callDuration)}</p>
-                )}
-            </div>
-
-            {(currentTranscript || botResponse) && (
-                <div className="voice-call-transcript">
-                    {currentTranscript && (
-                        <div className="transcript-user">
-                            <span className="transcript-label">Tú:</span>
-                            <p>{currentTranscript}</p>
-                        </div>
-                    )}
-                    {botResponse && (
-                        <div className="transcript-bot">
-                            <span className="transcript-label">InmoBot:</span>
-                            <p>{botResponse}</p>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {error && <div className="voice-call-error">{error}</div>}
-
-            <div className="voice-call-controls">
-                {callState === CALL_STATES.IDLE || callState === CALL_STATES.ENDED ? (
-                    <button className="call-btn start-call" onClick={startCall}>
-                        <PhoneIcon />
-                        <span>Iniciar Llamada</span>
+        <div className={containerClass}>
+            {/* Header */}
+            <header className="voice-call-header">
+                <div className="header-left">
+                    <button className="back-button" onClick={() => window.history.back()}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
                     </button>
+                    <div className="header-title">
+                        <h1>InmoBot</h1>
+                        {callState !== CALL_STATES.IDLE && callState !== CALL_STATES.ENDED && (
+                            <span className="call-duration">{formatDuration(callDuration)}</span>
+                        )}
+                    </div>
+                </div>
+            </header>
+
+            {/* Main Content */}
+            <main className="voice-call-main">
+                {callState === CALL_STATES.IDLE || callState === CALL_STATES.ENDED ? (
+                    /* Idle State */
+                    <div className="idle-content">
+                        <div className="avatar-section">
+                            <div className="avatar-container">
+                                <div className="avatar-orb">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <h2 className="idle-title">Asistente Inmobiliario</h2>
+                        <p className="idle-subtitle">
+                            Habla con InmoBot para encontrar tu propiedad ideal. Solo presiona el botón para comenzar.
+                        </p>
+                    </div>
                 ) : (
+                    /* Active Call State */
                     <>
-                        <button className={`call-btn mute-btn ${isMuted ? 'muted' : ''}`} onClick={toggleMute}>
-                            {isMuted ? <MicOffIcon /> : <MicOnIcon />}
-                        </button>
-                        <button className="call-btn end-call" onClick={endCall}>
-                            <PhoneOffIcon />
-                        </button>
-                        <button className={`call-btn speaker-btn ${callState === CALL_STATES.SPEAKING ? 'speaking' : ''}`}>
-                            <VolumeIcon />
-                        </button>
-                        {/* Botón de emergencia para forzar escucha */}
-                        {callState === CALL_STATES.SPEAKING && (
-                            <button
-                                className="call-btn"
-                                onClick={() => {
-                                    console.log('🆘 FORZANDO ESCUCHA MANUAL');
-                                    if (audioRef.current) {
-                                        audioRef.current.pause();
-                                        audioRef.current = null;
-                                    }
-                                    isProcessingRef.current = false;
-                                    setCallState(CALL_STATES.LISTENING);
-                                    setTimeout(() => startListening(), 300);
-                                }}
-                                style={{fontSize: '12px', padding: '8px'}}
-                            >
-                                FORZAR ESCUCHA
-                            </button>
+                        <div className="avatar-section">
+                            <div className="avatar-container">
+                                <div className="avatar-rings">
+                                    <div className="avatar-ring"></div>
+                                    <div className="avatar-ring"></div>
+                                    <div className="avatar-ring"></div>
+                                </div>
+                                <div className="avatar-orb">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="status-section">
+                            <span className="status-label">{stateInfo.text}</span>
+                            <p className="status-message">{botResponse || 'Esperando...'}</p>
+                            {processingStep && <span className="processing-step">{processingStep}</span>}
+                        </div>
+
+                        {currentTranscript && (
+                            <div className="transcript-section">
+                                <div className="transcript-bubble">
+                                    <span className="transcript-label">Tú dijiste</span>
+                                    <p className="transcript-text user">{currentTranscript}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {error && (
+                            <div className="error-message">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                                </svg>
+                                {error}
+                            </div>
                         )}
                     </>
                 )}
-            </div>
+            </main>
+
+            {/* Controls */}
+            <footer className="voice-call-controls">
+                {callState === CALL_STATES.IDLE || callState === CALL_STATES.ENDED ? (
+                    <button className="control-button start-call" onClick={startCall}>
+                        <PhoneIcon />
+                    </button>
+                ) : (
+                    <>
+                        <button
+                            className={`control-button mute ${isMuted ? 'active' : ''}`}
+                            onClick={toggleMute}
+                        >
+                            {isMuted ? <MicOffIcon /> : <MicOnIcon />}
+                        </button>
+
+                        <button className="control-button end-call" onClick={endCall}>
+                            <PhoneOffIcon />
+                        </button>
+                    </>
+                )}
+            </footer>
         </div>
     );
 };
 
 export default VoiceCall;
+

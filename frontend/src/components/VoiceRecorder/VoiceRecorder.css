@@ -192,15 +192,128 @@
     }
 }
 
-/* Responsive */
-@media (max-width: 640px) {
+/* ==================== RESPONSIVE ==================== */
+
+/* Tablet (769px - 1024px) */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .voice-button {
+        width: 46px;
+        height: 46px;
+    }
+    
+    .voice-button svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .recording-timer {
+        font-size: 14px;
+        padding: 6px 12px;
+    }
+
+    .recording-indicator {
+        gap: 6px;
+    }
+}
+
+/* Mobile Large (481px - 768px) */
+@media (max-width: 768px) {
+    .voice-button {
+        width: 46px;
+        height: 46px;
+        min-width: 46px;
+        min-height: 46px;
+    }
+    
+    .voice-button svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .recording-timer {
+        font-size: 14px;
+    }
+
+    .voice-recorder {
+        gap: 0.625rem;
+    }
+}
+
+/* Mobile Small (320px - 480px) */
+@media (max-width: 480px) {
     .voice-button {
         width: 44px;
         height: 44px;
+        min-width: 44px;
+        min-height: 44px;
     }
     
     .voice-button svg {
         width: 20px;
         height: 20px;
     }
+
+    .recording-timer {
+        font-size: 13px;
+        padding: 5px 10px;
+    }
+
+    .recording-indicator span {
+        font-size: 12px;
+    }
+
+    .voice-recorder {
+        gap: 0.5rem;
+    }
 }
+
+/* Extra Small Devices (<375px) */
+@media (max-width: 374px) {
+    .voice-button {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+    }
+    
+    .voice-button svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .recording-timer {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+
+    .recording-indicator span {
+        font-size: 11px;
+    }
+}
+
+/* Landscape Mode (height < 500px) */
+@media (max-height: 500px) and (orientation: landscape) {
+    .voice-button {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .voice-button svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .recording-timer {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+}
+
+/* Touch devices - ensure adequate touch targets */
+@media (pointer: coarse) {
+    .voice-button {
+        min-width: 48px;
+        min-height: 48px;
+    }
+}
+

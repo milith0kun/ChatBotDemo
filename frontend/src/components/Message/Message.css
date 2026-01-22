@@ -300,9 +300,33 @@
 }
 
 /* ==================== RESPONSIVE ==================== */
+
+/* Tablet (769px - 1024px) */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .message {
+        max-width: 80%;
+        gap: var(--space-3);
+    }
+
+    .message-avatar {
+        width: 38px;
+        height: 38px;
+    }
+
+    .message-bubble {
+        padding: var(--space-3) var(--space-4);
+    }
+
+    .message-text {
+        font-size: 15px;
+    }
+}
+
+/* Mobile Large (481px - 768px) */
 @media (max-width: 768px) {
     .message {
         max-width: 90%;
+        gap: var(--space-2-5);
     }
 
     .message-avatar {
@@ -321,16 +345,33 @@
 
     .message-text {
         font-size: var(--text-sm);
+        line-height: 1.5;
     }
 
     .message-time {
         opacity: 1;
+        font-size: 11px;
+    }
+
+    /* Property cards responsive */
+    .property-card {
+        padding: var(--space-3);
+    }
+
+    .property-card h3 {
+        font-size: 15px;
+    }
+
+    .property-info {
+        font-size: 13px;
     }
 }
 
+/* Mobile Small (320px - 480px) */
 @media (max-width: 480px) {
     .message {
         gap: var(--space-2);
+        max-width: 95%;
     }
 
     .message-avatar {
@@ -341,6 +382,79 @@
     .message-avatar svg {
         width: 16px;
         height: 16px;
+    }
+
+    .message-bubble {
+        padding: var(--space-2-5) var(--space-3);
+    }
+
+    .message-text {
+        font-size: 14px;
+    }
+
+    /* Property cards for small screens */
+    .property-card {
+        padding: var(--space-2-5);
+    }
+
+    .property-card h3 {
+        font-size: 14px;
+    }
+
+    .property-header {
+        flex-direction: column;
+        gap: var(--space-2);
+        align-items: flex-start;
+    }
+
+    .property-features {
+        flex-wrap: wrap;
+        gap: var(--space-2);
+    }
+
+    .property-feature {
+        font-size: 12px;
+    }
+}
+
+/* Extra Small Devices (<375px) */
+@media (max-width: 374px) {
+    .message {
+        max-width: 98%;
+        gap: var(--space-1-5);
+    }
+
+    .message-avatar {
+        width: 28px;
+        height: 28px;
+    }
+
+    .message-bubble {
+        padding: var(--space-2) var(--space-2-5);
+    }
+
+    .message-text {
+        font-size: 13px;
+    }
+
+    .message-time {
+        font-size: 10px;
+    }
+}
+
+/* Landscape Mode (height < 500px) */
+@media (max-height: 500px) and (orientation: landscape) {
+    .message-avatar {
+        width: 32px;
+        height: 32px;
+    }
+
+    .message-bubble {
+        padding: var(--space-2) var(--space-3);
+    }
+
+    .property-card {
+        padding: var(--space-2);
     }
 }
 
