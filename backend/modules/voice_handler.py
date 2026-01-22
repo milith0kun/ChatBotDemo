@@ -357,10 +357,6 @@ def adapt_text_for_voice(text: str, channel: str = "voice") -> str:
         "@": " arroba ",
         "hab.": " habitaciones",
         "hab": " habitaciones",
-        "habitación": " ha-bi-ta-ción",  # Separación silábica para mejor pronunciación
-        "habitaciones": " ha-bi-ta-cio-nes",  # Separación silábica
-        "ayudarte": " a-yu-dar-te",  # Mejor pronunciación
-        "puedo": " pue-do",  # Evita pronunciación rápida
         "nº": " número",
         "Nº": " número",
         "°": " grados",
@@ -421,14 +417,14 @@ def adapt_text_for_voice(text: str, channel: str = "voice") -> str:
     # PASO 7: Normalizar espacios pero MANTENER dobles espacios para pausas
     result = re.sub(r' {3,}', '  ', result)  # Máximo 2 espacios
     
-    # PASO 8: Corte inteligente
-    if len(result) > 800:
-        cut_point = result[:750].rfind('.')
-        if cut_point > 400:
-            result = result[:cut_point + 1] + "  Para más información puedo darte detalles adicionales."
-        elif len(result) > 1000:
-            cut_point = result[:750].rfind(' ')
-            if cut_point > 400:
+    # PASO 8: Corte inteligente - MÁS CORTO para respuestas rápidas
+    if len(result) > 500:
+        cut_point = result[:450].rfind('.')
+        if cut_point > 250:
+            result = result[:cut_point + 1]
+        elif len(result) > 600:
+            cut_point = result[:450].rfind(' ')
+            if cut_point > 250:
                 result = result[:cut_point] + "."
     
     # Limpiar y asegurar puntuación final
