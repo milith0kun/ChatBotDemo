@@ -77,8 +77,8 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
     }, [callState]);
 
     // Configuración ULTRA-RÁPIDA para respuesta inmediata
-    const SILENCE_THRESHOLD = 0.025;  // Balance entre sensibilidad y ruido
-    const SILENCE_DURATION = 500;     // 0.5 segundos - respuesta INSTANTÁNEA
+    const SILENCE_THRESHOLD = 0.030;  // Umbral ajustado para filtrar ruido ambiental (0.022-0.024)
+    const SILENCE_DURATION = 350;     // 0.35 segundos - RESPUESTA RELÁMPAGO
     const MAX_CALL_DURATION = 300;
     const CHECK_INTERVAL = 50;        // Revisar cada 50ms para máxima velocidad
 
@@ -493,10 +493,10 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
                     setCallState(CALL_STATES.LISTENING);
 
                     const timeoutId = setTimeout(() => {
-                        console.log('   - ⏰ EJECUTANDO startListening() después del delay de 600ms');
+                        console.log('   - ⏰ EJECUTANDO startListening() después del delay de 400ms');
                         console.log(`   - Estado justo antes de startListening: ${callStateRef.current}`);
                         startListening();
-                    }, 600);
+                    }, 400);
 
                     console.log(`   - Timeout programado con ID: ${timeoutId}`);
                 } else {
