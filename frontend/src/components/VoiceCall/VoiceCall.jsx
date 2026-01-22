@@ -188,7 +188,7 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
 
             // Bienvenida
             setCallState(CALL_STATES.SPEAKING);
-            setBotResponse('Hola, soy InmoBot. ¿En qué puedo ayudarte?');
+            setBotResponse('Hola, soy InmoBot. Dime en qué puedo ayudarte.');
             await playWelcomeMessage();
 
         } catch (err) {
@@ -202,7 +202,7 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
         console.log('👋 Reproduciendo bienvenida...');
         try {
             setProcessingStep('Preparando bienvenida...');
-            const audioBlob = await getVoiceResponse('Hola, soy InmoBot. ¿En qué puedo ayudarte?');
+            const audioBlob = await getVoiceResponse('Hola, soy InmoBot. Dime en qué puedo ayudarte.');
             setProcessingStep('');
             const audioUrl = URL.createObjectURL(audioBlob);
             const audio = new Audio(audioUrl);

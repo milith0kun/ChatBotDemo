@@ -347,8 +347,8 @@ def adapt_text_for_voice(text: str, channel: str = "voice") -> str:
     text = re.sub(r'\b(\d+)\b', lambda m: numero_a_palabras(m), text)
     
     # PASO 2: Conversiones de símbolos y unidades a palabras
-    replacements = {
-        "€": " euros",
+    replacements = {        "¿": "",  # Eliminar signo de interrogación de apertura
+        "?": ".",  # Convertir interrogación a punto para mejor pronunciación        "€": " euros",
         "$": " dólares",
         "m²": " metros cuadrados",
         "m2": " metros cuadrados",
@@ -363,6 +363,8 @@ def adapt_text_for_voice(text: str, channel: str = "voice") -> str:
         "+": " más",
         "km": " kilómetros",
         "cm": " centímetros",
+        "¿": "",
+        "?": ".",
     }
     
     result = text

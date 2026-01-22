@@ -321,7 +321,7 @@ async def voice_transcribe(
             voice_sessions[session_id] = [
                 {
                     "role": "assistant",
-                    "content": "Hola, soy InmoBot. ¿En qué puedo ayudarte?"
+                    "content": "Hola, soy InmoBot. Dime en qué puedo ayudarte."
                 }
             ]
             print(f"[SESSION] Nueva sesión creada con saludo inicial: {session_id}")
