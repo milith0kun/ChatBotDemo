@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 import uuid
+import asyncio
+import time
 
 from config import FRONTEND_URL, PORT
 from modules.ai_agent import process_message
