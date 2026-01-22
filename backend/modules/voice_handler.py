@@ -199,6 +199,10 @@ def synthesize_speech_deepgram(text: str, voice: str = None) -> bytes:
     # Usar mejor modelo TTS
     model = voice or VOICE_CONFIG["deepgram"]["tts_model"]
     
+    # DEBUG: Imprimir texto exacto enviado a Deepgram
+    print(f"[DEEPGRAM TTS] Texto enviado: '{text}'")
+    print(f"[DEEPGRAM TTS] Longitud: {len(text)} caracteres")
+    
     headers = {
         "Authorization": f"Token {DEEPGRAM_API_KEY}",
         "Content-Type": "application/json"
@@ -347,8 +351,10 @@ def adapt_text_for_voice(text: str, channel: str = "voice") -> str:
     text = re.sub(r'\b(\d+)\b', lambda m: numero_a_palabras(m), text)
     
     # PASO 2: Conversiones de símbolos y unidades a palabras
-    replacements = {        "¿": "",  # Eliminar signo de interrogación de apertura
-        "?": ".",  # Convertir interrogación a punto para mejor pronunciación        "€": " euros",
+    replacements = {
+        "¿": "",  # Eliminar signo de interrogación de apertura
+        "?": ".",  # Convertir interrogación a punto para mejor pronunciación
+        "€": " euros",
         "$": " dólares",
         "m²": " metros cuadrados",
         "m2": " metros cuadrados",
@@ -363,13 +369,14 @@ def adapt_text_for_voice(text: str, channel: str = "voice") -> str:
         "+": " más",
         "km": " kilómetros",
         "cm": " centímetros",
-        "¿": "",
-        "?": ".",
     }
     
     result = text
     for symbol, replacement in replacements.items():
         result = result.replace(symbol, replacement)
+    
+    # DEBUG: Imprimir texto después de reemplazos
+    print(f"[ADAPT TEXT] Texto después de replacements: '{result}'")
     
     # PASO 3: Quitar emojis
     emoji_pattern = re.compile("["
@@ -437,6 +444,10 @@ def adapt_text_for_voice(text: str, channel: str = "voice") -> str:
     # Verificar que no quedó vacío
     if not result or result.strip() == '':
         result = "Lo siento.  No pude procesar esa información."
+    
+    # DEBUG: Imprimir resultado final
+    print(f"[ADAPT TEXT] Texto final adaptado: '{result}'")
+    print(f"[ADAPT TEXT] Longitud final: {len(result)} caracteres")
     
     return result
 
