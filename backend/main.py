@@ -357,7 +357,6 @@ async def voice_transcribe(
         voice_sessions[session_id] = updated_history
 
         # Crear o actualizar lead EN BACKGROUND (sin esperar)
-        import asyncio
         asyncio.create_task(save_lead_async(session_id, lead_data, updated_history))
 
         total_time = time.time() - start_time
