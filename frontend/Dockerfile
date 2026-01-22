@@ -3,14 +3,14 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Copiar package files
-COPY package*.json ./
+# Copiar package files desde frontend/
+COPY frontend/package*.json ./
 
 # Instalar dependencias
 RUN npm ci
 
-# Copiar código fuente
-COPY . .
+# Copiar código fuente desde frontend/
+COPY frontend/ .
 
 # Argumento para la URL del API (se puede pasar desde Dokploy)
 ARG VITE_API_URL=https://api-chat-demo.ecosdelseo.com
