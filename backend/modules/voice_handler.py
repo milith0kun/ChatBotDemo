@@ -47,7 +47,7 @@ VOICE_CONFIG = {
         "encoding": "mp3",
         "sample_rate": 24000,
         "container": "mp3",
-        "bitrate": 128000
+        "bitrate": 192000  # Aumentado de 128000 a 192000 para mejor calidad y claridad
     }
 }
 
@@ -357,6 +357,8 @@ def adapt_text_for_voice(text: str, channel: str = "voice") -> str:
         "@": " arroba ",
         "hab.": " habitaciones",
         "hab": " habitaciones",
+        "habitación": " ha-bi-ta-ción",  # Separación silábica para mejor pronunciación
+        "habitaciones": " ha-bi-ta-cio-nes",  # Separación silábica
         "nº": " número",
         "Nº": " número",
         "°": " grados",
