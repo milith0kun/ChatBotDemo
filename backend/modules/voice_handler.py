@@ -286,89 +286,31 @@ def synthesize_speech(text: str, voice: str = None, speed: float = None) -> byte
 
 def adapt_text_for_voice(text: str, channel: str = "voice") -> str:
     """
-    Adapta el texto para voz natural y completa.
-    MEJORADO: Convierte números a palabras para perfecta pronunciación.
+    Adapta el texto para voz natural - SIMPLIFICADO para evitar errores de pronunciación.
     """
     if channel != "voice":
         return text
     
     import re
     
-    # PASO 1: Convertir números a palabras ANTES de cualquier otra cosa
-    # Esto es CRUCIAL para buena pronunciación
+    # PASO 1: Convertir SOLO precios grandes a formato simple (sin conversión compleja)
+    # Deepgram maneja mejor números en formato simple que conversiones complejas
     
-    def numero_a_palabras(match):
-        """Convierte números a palabras en español"""
-        num = int(match.group(0).replace('.', '').replace(',', ''))
-        
-        if num == 0:
-            return "cero"
-        
-        unidades = ["", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve"]
-        decenas = ["", "", "veinte", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"]
-        especiales = ["diez", "once", "doce", "trece", "catorce", "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve"]
-        centenas = ["", "ciento", "doscientos", "trescientos", "cuatrocientos", "quinientos", "seiscientos", "setecientos", "ochocientos", "novecientos"]
-        
-        if num < 10:
-            return unidades[num]
-        elif num < 20:
-            return especiales[num - 10]
-        elif num < 100:
-            d = num // 10
-            u = num % 10
-            if u == 0:
-                return decenas[d]
-            elif d == 2:
-                return "veinti" + unidades[u]
-            else:
-                return decenas[d] + (" y " + unidades[u] if u > 0 else "")
-        elif num < 1000:
-            c = num // 100
-            resto = num % 100
-            if num == 100:
-                return "cien"
-            result = centenas[c]
-            if resto > 0:
-                result += " " + numero_a_palabras(type('obj', (), {'group': lambda self, x: str(resto)})())
-            return result
-        elif num < 1000000:
-            miles = num // 1000
-            resto = num % 1000
-            if miles == 1:
-                result = "mil"
-            else:
-                result = numero_a_palabras(type('obj', (), {'group': lambda self, x: str(miles)})()) + " mil"
-            if resto > 0:
-                result += " " + numero_a_palabras(type('obj', (), {'group': lambda self, x: str(resto)})())
-            return result
-        else:
-            return str(num)
+    # Convertir 320.000 → 320 mil
+    text = re.sub(r'(\d+)\.000\b', r'\1 mil', text)
     
-    # Convertir precios comunes (ej: 200.000, 450.000, etc.)
-    text = re.sub(r'(\d{1,3})\.(\d{3})', lambda m: numero_a_palabras(m), text)
+    # Convertir 1.500.000 → 1 millón 500 mil (si existe)
+    text = re.sub(r'(\d+)\.(\d+)\.000\b', r'\1 millón \2 mil', text)
     
-    # Convertir números sueltos
-    text = re.sub(r'\b(\d+)\b', lambda m: numero_a_palabras(m), text)
-    
-    # PASO 2: Conversiones de símbolos y unidades a palabras
+    # PASO 2: Conversiones MÍNIMAS de símbolos (solo lo esencial)
     replacements = {
         "¿": "",  # Eliminar signo de interrogación de apertura
-        "?": ".",  # Convertir interrogación a punto para mejor pronunciación
+        "?": ".",  # Convertir interrogación a punto
         "€": " euros",
-        "$": " dólares",
         "m²": " metros cuadrados",
         "m2": " metros cuadrados",
         "%": " por ciento",
         "&": " y ",
-        "@": " arroba ",
-        "hab.": " habitaciones",
-        "hab": " habitaciones",
-        "nº": " número",
-        "Nº": " número",
-        "°": " grados",
-        "+": " más",
-        "km": " kilómetros",
-        "cm": " centímetros",
     }
     
     result = text
@@ -378,67 +320,26 @@ def adapt_text_for_voice(text: str, channel: str = "voice") -> str:
     # DEBUG: Imprimir texto después de reemplazos
     print(f"[ADAPT TEXT] Texto después de replacements: '{result}'")
     
-    # PASO 3: Quitar emojis
+    # PASO 3: Limpiar emojis (pero NO eliminar acentos ni caracteres españoles)
     emoji_pattern = re.compile("["
         u"\U0001F600-\U0001F64F"
         u"\U0001F300-\U0001F5FF"
         u"\U0001F680-\U0001F6FF"
         u"\U0001F1E0-\U0001F1FF"
-        u"\U00002702-\U000027B0"
-        u"\U000024C2-\U0001F251"
-        u"\U0001f926-\U0001f937"
-        u"\U00010000-\U0010ffff"
         "]+", flags=re.UNICODE)
     result = emoji_pattern.sub(' ', result)
     
-    # PASO 4: Limpiar markdown
+    # PASO 4: Limpiar markdown MÍNIMO
     result = re.sub(r'\*\*(.*?)\*\*', r'\1', result)
     result = re.sub(r'\*(.*?)\*', r'\1', result)
-    result = re.sub(r'__(.*?)__', r'\1', result)
-    result = re.sub(r'~~(.*?)~~', r'\1', result)
-    result = re.sub(r'[━─═]+', '. ', result)
-    result = re.sub(r'-{3,}', '. ', result)
-    result = re.sub(r'https?://\S+', ' el sitio web ', result)
-    result = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', result)
     result = re.sub(r'[#`~_]', '', result)
     
-    # PASO 5: AÑADIR PAUSAS para mejor pronunciación
-    # Reemplazar comas con pausas más largas
-    result = re.sub(r',', ', ', result)  # Doble espacio después de coma
-    
-    # PASO 6: Mejorar puntuación
-    result = re.sub(r'\n+', '.  ', result)  # Doble espacio para pausas
-    result = re.sub(r'\r', '', result)
-    result = re.sub(r'\s*\.\s*', '.  ', result)  # Doble espacio después de punto
-    result = re.sub(r'\s*;\s*', ';  ', result)
-    result = re.sub(r'\s*:\s*', ':  ', result)
-    result = re.sub(r'\s*\?\s*', '?  ', result)
-    result = re.sub(r'\s*!\s*', '!  ', result)
-    
-    # Eliminar múltiples signos
-    result = re.sub(r'\.{2,}', '.', result)
-    result = re.sub(r'\?{2,}', '?', result)
-    result = re.sub(r'!{2,}', '!', result)
-    
-    # Eliminar caracteres problemáticos
-    result = re.sub(r'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]', '', result)
-    
-    # PASO 7: Normalizar espacios pero MANTENER dobles espacios para pausas
-    result = re.sub(r' {3,}', '  ', result)  # Máximo 2 espacios
-    
-    # PASO 8: Corte inteligente - MÁS CORTO para respuestas rápidas
-    if len(result) > 500:
-        cut_point = result[:450].rfind('.')
-        if cut_point > 250:
-            result = result[:cut_point + 1]
-        elif len(result) > 600:
-            cut_point = result[:450].rfind(' ')
-            if cut_point > 250:
-                result = result[:cut_point] + "."
-    
-    # Limpiar y asegurar puntuación final
+    # PASO 5: Normalizar espacios
+    result = re.sub(r'\s+', ' ', result)  # Un solo espacio
     result = result.strip()
-    if result and not result[-1] in '.?!:':
+    
+    # PASO 6: Asegurar puntuación final
+    if result and not result[-1] in '.?!':
         result = result + '.'
     
     # Verificar que no quedó vacío
