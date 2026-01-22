@@ -76,11 +76,11 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
         console.log(`🔄 Estado cambiado a: ${callState}`);
     }, [callState]);
 
-    // Configuración OPTIMIZADA para respuesta rápida
-    const SILENCE_THRESHOLD = 0.02;   // Umbral ajustado para mejor detección
-    const SILENCE_DURATION = 600;     // 0.6 segundos - respuesta MUY rápida
+    // Configuración ULTRA-RÁPIDA para respuesta inmediata
+    const SILENCE_THRESHOLD = 0.025;  // Balance entre sensibilidad y ruido
+    const SILENCE_DURATION = 500;     // 0.5 segundos - respuesta INSTANTÁNEA
     const MAX_CALL_DURATION = 300;
-    const CHECK_INTERVAL = 80;        // Revisar cada 80ms para detección más rápida
+    const CHECK_INTERVAL = 50;        // Revisar cada 50ms para máxima velocidad
 
     // Temporizador de duración
     useEffect(() => {
@@ -305,6 +305,8 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
         const dataArray = new Uint8Array(bufferLength);
         let silenceStart = null;
         let hasSpoken = false;
+        let consecutiveSpeechChecks = 0;  // Contador para evitar falsos positivos de ruido
+        const SPEECH_CHECKS_REQUIRED = 2;  // Solo 2 checks para respuesta más rápida
 
         const checkSilence = () => {
             // Verificar que aún debemos estar escuchando
@@ -330,20 +332,29 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
             const average = dataArray.reduce((a, b) => a + b, 0) / bufferLength / 255;
 
             if (average > SILENCE_THRESHOLD) {
-                if (!hasSpoken) {
-                    console.log('🗣️ Usuario comenzó a hablar');
+                consecutiveSpeechChecks++;
+
+                // Solo considerar que está hablando después de varios checks consecutivos
+                if (consecutiveSpeechChecks >= SPEECH_CHECKS_REQUIRED) {
+                    if (!hasSpoken) {
+                        console.log(`🗣️ Usuario comenzó a hablar (nivel: ${average.toFixed(4)})`);
+                    }
+                    hasSpoken = true;
+                    silenceStart = null;
                 }
-                hasSpoken = true;
-                silenceStart = null;
-            } else if (hasSpoken) {
-                if (!silenceStart) {
-                    silenceStart = Date.now();
-                    console.log('🤫 Silencio detectado...');
-                } else {
-                    const silenceDuration = Date.now() - silenceStart;
-                    if (silenceDuration > SILENCE_DURATION) {
-                        console.log(`✅ Silencio completo (${silenceDuration}ms), procesando...`);
-                        stopListening();
+            } else {
+                consecutiveSpeechChecks = 0;  // Resetear contador de habla
+
+                if (hasSpoken) {
+                    if (!silenceStart) {
+                        silenceStart = Date.now();
+                        console.log(`🤫 Silencio detectado (nivel: ${average.toFixed(4)})`);
+                    } else {
+                        const silenceDuration = Date.now() - silenceStart;
+                        if (silenceDuration > SILENCE_DURATION) {
+                            console.log(`✅ Silencio completo (${silenceDuration}ms), procesando...`);
+                            stopListening();
+                        }
                     }
                 }
             }

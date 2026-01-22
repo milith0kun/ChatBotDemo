@@ -8,7 +8,16 @@
       "Bash(taskkill /PID 21248 /F)",
       "Bash(cmd.exe /c \"taskkill /PID 21248 /F\")",
       "Bash(powershell -Command \"Get-Process python* | Stop-Process -Force\")",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(powershell -Command \"Get-Process python* 2>$null | Select-Object Id, ProcessName, StartTime\")",
+      "Bash(tasklist:*)",
+      "Bash(more:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell -Command \"Stop-Process -Id 18288 -Force\")",
+      "Skill(frontend-design)",
+      "Bash(powershell -Command \"Get-Process -Name python -ErrorAction SilentlyContinue | Stop-Process -Force\")",
+      "Bash(powershell -Command \"Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 2\")",
+      "Bash(powershell -Command \"Start-Sleep -Seconds 3; Invoke-RestMethod -Uri ''http://localhost:8000/api/health'' -Method Get\")"
     ]
   }
 }

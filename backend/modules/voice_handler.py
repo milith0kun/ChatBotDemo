@@ -42,12 +42,12 @@ VOICE_CONFIG = {
         "speed": 0.95  # MÁS LENTA para mejor articulación y claridad
     },
     "deepgram": {
-        "stt_model": "nova-2",  # Modelo STT más rápido de Deepgram
-        "tts_model": "aura-asteria-es",  # Voz femenina en español - más natural y expresiva
+        "stt_model": "nova",  # Modelo base (nova-2 requiere permisos especiales)
+        "tts_model": "aura-asteria-es",  # Voz femenina en español
         "encoding": "mp3",
-        "sample_rate": 24000,  # Balance entre calidad y velocidad
-        "container": "mp3",  # Formato de salida
-        "bitrate": 128000  # Bitrate para mejor calidad
+        "sample_rate": 24000,
+        "container": "mp3",
+        "bitrate": 128000
     }
 }
 
