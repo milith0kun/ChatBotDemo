@@ -7,7 +7,8 @@ import uuid
 import asyncio
 import time
 
-from config import FRONTEND_URL, PORT
+import httpx
+from config import FRONTEND_URL, PORT, OPENAI_API_KEY
 from modules.ai_agent import process_message
 from modules.lead_manager import get_all_leads, load_properties, get_lead_by_id, create_or_update_lead
 from modules.telegram_bot import send_telegram_message, extract_message_data, set_webhook, get_webhook_info
@@ -100,6 +101,81 @@ async def root():
 async def health_check():
     """Health check del servidor."""
     return {"status": "healthy", "message": "El servidor está funcionando correctamente"}
+
+
+# ==================== OPENAI REALTIME API ====================
+
+@app.post("/api/realtime/session")
+async def create_realtime_session():
+    """
+    Crea una sesión efímera para OpenAI Realtime API con WebRTC.
+    Retorna un token que expira en 60 segundos.
+    Este token se usa en el cliente para establecer la conexión WebRTC.
+    """
+    try:
+        if not OPENAI_API_KEY:
+            raise HTTPException(status_code=500, detail="OPENAI_API_KEY no configurada")
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.openai.com/v1/realtime/sessions",
+                headers={
+                    "Authorization": f"Bearer {OPENAI_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "gpt-4o-realtime-preview-2024-12-17",
+                    "voice": "shimmer",  # Voz femenina natural en español
+                    "instructions": """Eres InmoBot, un asistente inmobiliario profesional y amigable.
+
+REGLAS IMPORTANTES:
+- Habla SIEMPRE en español
+- Sé conciso y directo en tus respuestas de voz
+- Ayuda a los usuarios a encontrar propiedades inmobiliarias
+- Puedes responder preguntas sobre:
+  - Tipos de propiedades (casas, departamentos, terrenos)
+  - Ubicaciones disponibles
+  - Rangos de precios
+  - Características de las propiedades
+  - Proceso de compra/alquiler
+- Si el usuario da su nombre, teléfono o email, guárdalo mentalmente para referenciarlo
+- Mantén un tono profesional pero cálido
+- Las respuestas deben ser breves (2-3 oraciones máximo) para una conversación fluida
+
+SALUDO INICIAL:
+Cuando el usuario inicie la llamada, saluda brevemente: "Hola, soy InmoBot. ¿En qué puedo ayudarte hoy?"
+""",
+                    "input_audio_transcription": {
+                        "model": "whisper-1"
+                    },
+                    "turn_detection": {
+                        "type": "server_vad",
+                        "threshold": 0.5,
+                        "prefix_padding_ms": 300,
+                        "silence_duration_ms": 500
+                    }
+                },
+                timeout=10.0
+            )
+        
+        if response.status_code != 200:
+            error_text = response.text
+            print(f"[REALTIME] Error de OpenAI: {response.status_code} - {error_text}")
+            raise HTTPException(
+                status_code=response.status_code, 
+                detail=f"Error de OpenAI Realtime API: {error_text}"
+            )
+        
+        session_data = response.json()
+        print(f"[REALTIME] Sesión creada exitosamente")
+        
+        return session_data
+        
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="Timeout al conectar con OpenAI")
+    except Exception as e:
+        print(f"[REALTIME] Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al crear sesión: {str(e)}")
 
 
 @app.post("/api/chat", response_model=ChatResponse)

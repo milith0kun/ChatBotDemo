@@ -114,6 +114,87 @@
     border-radius: var(--vc-radius-sm);
 }
 
+/* WebRTC Badge */
+.webrtc-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--vc-font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--vc-success);
+    background: rgba(16, 185, 129, 0.1);
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.webrtc-badge .badge-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--vc-success);
+    border-radius: 50%;
+    animation: pulseDot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+/* Tech Badge (idle state) */
+.tech-badge {
+    margin-top: 16px;
+    font-family: var(--vc-font-mono);
+    font-size: 12px;
+    color: var(--vc-text-muted);
+    background: rgba(13, 79, 79, 0.05);
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px dashed var(--vc-border);
+}
+
+.tech-badge span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Volume Indicator */
+.volume-indicator {
+    width: 100%;
+    max-width: 200px;
+    height: 4px;
+    background: var(--vc-border);
+    border-radius: 2px;
+    margin-top: 16px;
+    overflow: hidden;
+}
+
+.volume-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--vc-success), var(--vc-primary));
+    border-radius: 2px;
+    transition: width 0.1s ease-out;
+}
+
+/* State: Connecting */
+.voice-call-container.state-connecting .avatar-orb {
+    animation: connectingPulse 1s ease-in-out infinite;
+}
+
+@keyframes connectingPulse {
+    0%, 100% { 
+        opacity: 1;
+        box-shadow: 0 8px 32px rgba(13, 79, 79, 0.3);
+    }
+    50% { 
+        opacity: 0.7;
+        box-shadow: 0 8px 48px rgba(245, 158, 11, 0.4);
+    }
+}
+
 /* ==================== MAIN CONTENT - FLEX GROW ==================== */
 .voice-call-main {
     flex: 1;

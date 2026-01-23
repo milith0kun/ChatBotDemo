@@ -1,8 +1,8 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { sendVoiceMessage, getVoiceResponse } from '../../services/api';
+import { useState, useEffect, useRef } from 'react';
+import useWebRTC from '../../hooks/useWebRTC';
 import './VoiceCall.css';
 
-// Iconos SVG para llamada
+// Iconos SVG
 const PhoneIcon = () => (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
@@ -35,578 +35,111 @@ const MicOffIcon = () => (
     </svg>
 );
 
-
-
-// Estados de la llamada
-const CALL_STATES = {
-    IDLE: 'idle',
-    CONNECTING: 'connecting',
-    LISTENING: 'listening',
-    PROCESSING: 'processing',
-    SPEAKING: 'speaking',
-    ENDED: 'ended'
-};
-
-const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
-    const [callState, setCallState] = useState(CALL_STATES.IDLE);
-    const [isMuted, setIsMuted] = useState(false);
+const VoiceCall = ({ onCallEnd, onMessage }) => {
     const [callDuration, setCallDuration] = useState(0);
-    const [currentTranscript, setCurrentTranscript] = useState('');
-    const [botResponse, setBotResponse] = useState('');
     const [error, setError] = useState(null);
-    const [processingStep, setProcessingStep] = useState('');
-
-    // Referencias
-    const mediaRecorderRef = useRef(null);
-    const audioChunksRef = useRef([]);
-    const streamRef = useRef(null);
-    const audioRef = useRef(null);
     const timerRef = useRef(null);
-    const silenceTimerRef = useRef(null);
-    const analyserRef = useRef(null);
-    const audioContextRef = useRef(null);
-    const isProcessingRef = useRef(false);
-    const callStateRef = useRef(CALL_STATES.IDLE);
-    // IMPORTANTE: useRef para sessionId para que siempre tenga el valor actualizado
-    const sessionIdRef = useRef(initialSessionId || null);
 
-    // Sincronizar callStateRef con callState
-    useEffect(() => {
-        callStateRef.current = callState;
-        console.log(`🔄 Estado cambiado a: ${callState}`);
-    }, [callState]);
-
-    // Configuración ULTRA-RÁPIDA para respuesta inmediata
-    const SILENCE_THRESHOLD = 0.035;  // Umbral aumentado para filtrar ruido ambiental (0.026-0.030)
-    const SILENCE_DURATION = 400;     // 0.4 segundos - balance entre velocidad y precisión
-    const MAX_CALL_DURATION = 300;
-    const CHECK_INTERVAL = 50;        // Revisar cada 50ms para máxima velocidad
-    const MAX_LISTENING_TIME = 10000; // 10 segundos máximo escuchando sin habla
+    // Hook de WebRTC
+    const {
+        status,
+        connectionState,
+        isSessionActive,
+        currentVolume,
+        conversation,
+        isMuted,
+        startSession,
+        stopSession,
+        toggleMute,
+        CONNECTION_STATES
+    } = useWebRTC({
+        voice: 'shimmer',
+        onMessage: (msg) => {
+            console.log('[VoiceCall] Mensaje:', msg);
+            onMessage?.(msg);
+        },
+        onError: (err) => {
+            console.error('[VoiceCall] Error:', err);
+            setError(err);
+        }
+    });
 
     // Temporizador de duración
     useEffect(() => {
-        if (callState !== CALL_STATES.IDLE && callState !== CALL_STATES.ENDED) {
+        if (isSessionActive) {
             timerRef.current = setInterval(() => {
-                setCallDuration(prev => {
-                    if (prev >= MAX_CALL_DURATION) {
-                        endCall();
-                        return prev;
-                    }
-                    return prev + 1;
-                });
+                setCallDuration(prev => prev + 1);
             }, 1000);
+        } else {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+            }
         }
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [callState]);
+    }, [isSessionActive]);
 
+    // Formatear duración
     const formatDuration = (seconds) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    // Función para limpiar y detener todo
-    const cleanupRecording = useCallback(() => {
-        console.log('🧹 Limpiando grabación...');
-
-        if (silenceTimerRef.current) {
-            clearInterval(silenceTimerRef.current);
-            silenceTimerRef.current = null;
-        }
-
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-            try {
-                mediaRecorderRef.current.stop();
-            } catch (e) {
-                console.error('Error deteniendo mediaRecorder:', e);
-            }
-        }
-    }, []);
-
-    // Iniciar llamada
-    const startCall = useCallback(async () => {
-        console.log('📞 Iniciando llamada...');
+    // Manejar inicio de llamada
+    const handleStartCall = async () => {
         setError(null);
-        setCallState(CALL_STATES.CONNECTING);
-        setBotResponse('');
-        setCurrentTranscript('');
-        setProcessingStep('');
-        isProcessingRef.current = false;
-
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    autoGainControl: true,
-                    sampleRate: 16000
-                }
-            });
-            streamRef.current = stream;
-            console.log('🎤 Micrófono obtenido');
-
-            audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-            const source = audioContextRef.current.createMediaStreamSource(stream);
-            analyserRef.current = audioContextRef.current.createAnalyser();
-            analyserRef.current.fftSize = 256;
-            analyserRef.current.smoothingTimeConstant = 0.3;
-            source.connect(analyserRef.current);
-
-            const mediaRecorder = new MediaRecorder(stream, {
-                mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
-            });
-            mediaRecorderRef.current = mediaRecorder;
-            audioChunksRef.current = [];
-
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    audioChunksRef.current.push(event.data);
-                }
-            };
-
-            mediaRecorder.onstop = async () => {
-                console.log('⏹️ MediaRecorder detenido');
-
-                if (audioChunksRef.current.length > 0 && !isProcessingRef.current) {
-                    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-                    console.log(`📦 Audio capturado: ${audioBlob.size} bytes`);
-
-                    if (audioBlob.size > 1000) {
-                        await processAudio(audioBlob);
-                    } else {
-                        console.log('⚠️ Audio muy pequeño, ignorando');
-                        // Volver a escuchar
-                        setCallState(CALL_STATES.LISTENING);
-                        setTimeout(() => startListening(), 500);
-                    }
-                }
-
-                // Limpiar chunks
-                audioChunksRef.current = [];
-            };
-
-            // Bienvenida
-            setCallState(CALL_STATES.SPEAKING);
-            setBotResponse('Hola, soy InmoBot. Dime en qué puedo ayudarte.');
-            await playWelcomeMessage();
-
-        } catch (err) {
-            console.error('❌ Error iniciando llamada:', err);
-            setError('No se pudo acceder al micrófono.');
-            setCallState(CALL_STATES.ENDED);
-        }
-    }, []);
-
-    const playWelcomeMessage = async () => {
-        console.log('👋 Reproduciendo bienvenida...');
-        try {
-            setProcessingStep('Preparando bienvenida...');
-            const audioBlob = await getVoiceResponse('Hola, soy InmoBot. Dime en qué puedo ayudarte.');
-            setProcessingStep('');
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-            audioRef.current = audio;
-
-            audio.onended = () => {
-                console.log('✅ Bienvenida terminada, iniciando escucha...');
-                URL.revokeObjectURL(audioUrl);
-                setCallState(CALL_STATES.LISTENING);
-                setTimeout(() => startListening(), 500);
-            };
-
-            audio.onerror = (e) => {
-                console.error('❌ Error reproduciendo bienvenida:', e);
-                URL.revokeObjectURL(audioUrl);
-                setCallState(CALL_STATES.LISTENING);
-                setTimeout(() => startListening(), 500);
-            };
-
-            await audio.play();
-        } catch (err) {
-            console.error('❌ Error en bienvenida:', err);
-            setCallState(CALL_STATES.LISTENING);
-            setTimeout(() => startListening(), 500);
-        }
+        setCallDuration(0);
+        await startSession();
     };
 
-    const startListening = useCallback(() => {
-        console.log('👂 Intentando iniciar escucha...');
-        console.log(`   - Estado actual: ${callStateRef.current}`);
-        console.log(`   - isProcessing: ${isProcessingRef.current}`);
-        console.log(`   - isMuted: ${isMuted}`);
-        console.log(`   - mediaRecorder existe: ${!!mediaRecorderRef.current}`);
-
-        if (!mediaRecorderRef.current) {
-            console.error('❌ No hay mediaRecorder');
-            return;
-        }
-
-        if (isMuted) {
-            console.log('🔇 Está muteado, no escuchar');
-            return;
-        }
-
-        if (isProcessingRef.current) {
-            console.log('⚠️ Ya está procesando, no escuchar');
-            return;
-        }
-
-        if (callStateRef.current === CALL_STATES.ENDED) {
-            console.log('📵 Llamada terminada, no escuchar');
-            return;
-        }
-
-        // SOLO limpiar el timer de silencio, NO detener el MediaRecorder
-        if (silenceTimerRef.current) {
-            console.log('🧹 Limpiando timer de silencio...');
-            clearInterval(silenceTimerRef.current);
-            silenceTimerRef.current = null;
-        }
-
-        setCallState(CALL_STATES.LISTENING);
-        setCurrentTranscript('');
-        setProcessingStep('');
-        audioChunksRef.current = [];
-
-        try {
-            const currentState = mediaRecorderRef.current.state;
-            console.log(`📝 MediaRecorder state: ${currentState}`);
-
-            if (currentState === 'recording') {
-                // Ya está grabando, solo reiniciar detección de silencio
-                console.log('⚠️ Ya estaba grabando, solo reiniciando detección de silencio');
-                detectSilence();
-            } else if (currentState === 'inactive') {
-                mediaRecorderRef.current.start(100);
-                console.log('✅ Grabación iniciada');
-                detectSilence();
-            } else if (currentState === 'paused') {
-                mediaRecorderRef.current.resume();
-                console.log('▶️ Grabación resumida');
-                detectSilence();
-            } else {
-                console.log(`⚠️ MediaRecorder en estado inesperado: ${currentState}`);
-            }
-        } catch (err) {
-            console.error('❌ Error iniciando grabación:', err);
-            setError('Error al iniciar grabación');
-        }
-    }, [isMuted]);
-
-    const detectSilence = useCallback(() => {
-        if (!analyserRef.current) {
-            console.error('❌ No hay analyser');
-            return;
-        }
-
-        console.log('👁️ Iniciando detección de silencio...');
-        const bufferLength = analyserRef.current.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        let silenceStart = null;
-        let hasSpoken = false;
-        let consecutiveSpeechChecks = 0;
-        let consecutiveSilenceChecks = 0;
-        const SPEECH_CHECKS_REQUIRED = 3;  // 3 checks consecutivos para confirmar habla (150ms)
-        const SILENCE_CHECKS_REQUIRED = 3;  // 3 checks consecutivos para confirmar silencio (150ms)
-        const listeningStartTime = Date.now();
-
-        const checkSilence = () => {
-            // Verificar que aún debemos estar escuchando
-            if (callStateRef.current !== CALL_STATES.LISTENING) {
-                if (silenceTimerRef.current) {
-                    clearInterval(silenceTimerRef.current);
-                    silenceTimerRef.current = null;
-                }
-                return;
-            }
-
-            if (!mediaRecorderRef.current || mediaRecorderRef.current.state !== 'recording') {
-                if (silenceTimerRef.current) {
-                    clearInterval(silenceTimerRef.current);
-                    silenceTimerRef.current = null;
-                }
-                return;
-            }
-
-            // Timeout: si lleva más de 10s escuchando sin hablar, procesar de todas formas
-            const listeningDuration = Date.now() - listeningStartTime;
-            if (!hasSpoken && listeningDuration > MAX_LISTENING_TIME) {
-                console.log('⏱️ Timeout: 10s sin habla, procesando...');
-                stopListening();
-                return;
-            }
-
-            analyserRef.current.getByteFrequencyData(dataArray);
-            const average = dataArray.reduce((a, b) => a + b, 0) / bufferLength / 255;
-
-            if (average > SILENCE_THRESHOLD) {
-                consecutiveSpeechChecks++;
-                consecutiveSilenceChecks = 0;  // Resetear contador de silencio
-
-                // Solo considerar que está hablando después de varios checks consecutivos
-                if (consecutiveSpeechChecks >= SPEECH_CHECKS_REQUIRED && !hasSpoken) {
-                    console.log(`🗣️ Usuario comenzó a hablar (nivel: ${average.toFixed(4)})`);
-                    hasSpoken = true;
-                    silenceStart = null;
-                }
-            } else {
-                consecutiveSpeechChecks = 0;  // Resetear contador de habla
-
-                if (hasSpoken) {
-                    consecutiveSilenceChecks++;
-
-                    // Solo marcar inicio de silencio después de confirmación
-                    if (consecutiveSilenceChecks >= SILENCE_CHECKS_REQUIRED && !silenceStart) {
-                        silenceStart = Date.now();
-                        console.log(`🤫 Silencio confirmado (nivel: ${average.toFixed(4)})`);
-                    } else if (silenceStart) {
-                        const silenceDuration = Date.now() - silenceStart;
-                        if (silenceDuration >= SILENCE_DURATION) {
-                            console.log(`✅ Silencio completo (${silenceDuration}ms), procesando...`);
-                            stopListening();
-                        }
-                    }
-                }
-            }
-        };
-
-        silenceTimerRef.current = setInterval(checkSilence, CHECK_INTERVAL);
-    }, []);
-
-    const stopListening = useCallback(() => {
-        console.log('⏸️ Deteniendo escucha...');
-
-        if (silenceTimerRef.current) {
-            clearInterval(silenceTimerRef.current);
-            silenceTimerRef.current = null;
-        }
-
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-            setCallState(CALL_STATES.PROCESSING);
-            setProcessingStep('Procesando...');
-            mediaRecorderRef.current.stop();
-        }
-    }, []);
-
-    const processAudio = async (audioBlob) => {
-        if (isProcessingRef.current) {
-            console.log('⚠️ Ya hay un audio procesándose, ignorando...');
-            return;
-        }
-
-        console.log('⚙️ Procesando audio...');
-        console.log('📋 Session ID actual:', sessionIdRef.current);
-        isProcessingRef.current = true;
-
-        try {
-            setProcessingStep('Transcribiendo...');
-
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Timeout')), 30000)
-            );
-
-            const responsePromise = sendVoiceMessage(audioBlob, sessionIdRef.current);
-            const response = await Promise.race([responsePromise, timeoutPromise]);
-
-            if (response.error) {
-                console.error('❌ Error del servidor:', response.error);
-                setError(response.error);
-                setProcessingStep('');
-                isProcessingRef.current = false;
-                setCallState(CALL_STATES.LISTENING);
-                setTimeout(() => startListening(), 500);
-                return;
-            }
-
-            console.log('✅ Respuesta recibida:', {
-                transcribed: response.transcribed_text,
-                response: response.bot_response
-            });
-
-            setProcessingStep('Generando respuesta...');
-            if (response.session_id) {
-                console.log('📥 Nuevo Session ID recibido:', response.session_id);
-                sessionIdRef.current = response.session_id;
-            }
-            setCurrentTranscript(response.transcribed_text || '');
-            setBotResponse(response.bot_response || '');
-
-            if (onMessage) {
-                onMessage({
-                    userMessage: response.transcribed_text,
-                    botResponse: response.bot_response,
-                    sessionId: response.session_id
-                });
-            }
-
-            if (response.bot_response) {
-                setProcessingStep('Preparando audio...');
-                await playBotResponse(response.bot_response);
-            } else if (response.filtered) {
-                // El backend filtró ruido ambiental
-                console.log('🔇 Ruido ambiental filtrado, volviendo a escuchar');
-                setProcessingStep('');
-                isProcessingRef.current = false;
-                setCallState(CALL_STATES.LISTENING);
-                setTimeout(() => startListening(), 300);
-            } else {
-                console.log('⚠️ Sin respuesta del bot, volviendo a escuchar');
-                setProcessingStep('');
-                isProcessingRef.current = false;
-                setCallState(CALL_STATES.LISTENING);
-                setTimeout(() => startListening(), 500);
-            }
-        } catch (err) {
-            console.error('❌ Error procesando:', err);
-            setError(err.message === 'Timeout' ? 'Tiempo agotado, intenta de nuevo.' : 'Error al procesar.');
-            setProcessingStep('');
-            isProcessingRef.current = false;
-            setCallState(CALL_STATES.LISTENING);
-            setTimeout(() => startListening(), 500);
-        }
+    // Manejar fin de llamada
+    const handleEndCall = () => {
+        stopSession();
+        onCallEnd?.({ duration: callDuration });
     };
 
-    const playBotResponse = async (text) => {
-        console.log('🔊 Reproduciendo respuesta del bot...');
-        setCallState(CALL_STATES.SPEAKING);
-        setProcessingStep('');
-
-        try {
-            const audioBlob = await getVoiceResponse(text);
-            const audioUrl = URL.createObjectURL(audioBlob);
-
-            if (audioRef.current) {
-                audioRef.current.pause();
-                audioRef.current = null;
-            }
-
-            const audio = new Audio(audioUrl);
-            audioRef.current = audio;
-
-            audio.onloadedmetadata = () => {
-                console.log(`🎵 Audio cargado, duración: ${audio.duration}s`);
-            };
-
-            audio.onended = () => {
-                console.log('✅✅✅ EVENTO ONENDED EJECUTADO ✅✅✅');
-                console.log('✅ Reproducción terminada, volviendo a escuchar...');
-                console.log(`   - Estado actual antes de limpiar: ${callStateRef.current}`);
-                console.log(`   - isProcessingRef: ${isProcessingRef.current}`);
-                console.log(`   - audioRef existe: ${!!audioRef.current}`);
-
-                URL.revokeObjectURL(audioUrl);
-                isProcessingRef.current = false;
-
-                // Verificar que no se haya terminado la llamada
-                if (callStateRef.current !== CALL_STATES.ENDED) {
-                    console.log('   - ✅ Cambiando a LISTENING y programando startListening()');
-                    setCallState(CALL_STATES.LISTENING);
-
-                    const timeoutId = setTimeout(() => {
-                        console.log('   - ⏰ EJECUTANDO startListening() después del delay de 400ms');
-                        console.log(`   - Estado justo antes de startListening: ${callStateRef.current}`);
-                        startListening();
-                    }, 400);
-
-                    console.log(`   - Timeout programado con ID: ${timeoutId}`);
-                } else {
-                    console.log('   - ❌ Llamada terminada, NO reiniciar escucha');
-                }
-            };
-
-            audio.onpause = () => {
-                console.log('⏸️ Audio pausado');
-            };
-
-            audio.onplay = () => {
-                console.log('▶️ Audio comenzó a reproducirse');
-            };
-
-            audio.onerror = (e) => {
-                console.error('❌ Error reproduciendo audio:', e);
-                URL.revokeObjectURL(audioUrl);
-                isProcessingRef.current = false;
-                setCallState(CALL_STATES.LISTENING);
-                setTimeout(() => startListening(), 600);
-            };
-
-            await audio.play();
-            console.log('▶️ Audio reproduciéndose...');
-        } catch (err) {
-            console.error('❌ Error en playBotResponse:', err);
-            isProcessingRef.current = false;
-            setCallState(CALL_STATES.LISTENING);
-            setTimeout(() => startListening(), 600);
-        }
+    // Obtener último mensaje del bot
+    const getLastBotMessage = () => {
+        const assistantMessages = conversation.filter(m => m.role === 'assistant');
+        return assistantMessages[assistantMessages.length - 1]?.text || '';
     };
 
-    const endCall = useCallback(() => {
-        console.log('📴 Finalizando llamada...');
-        isProcessingRef.current = false;
+    // Obtener último mensaje del usuario
+    const getLastUserMessage = () => {
+        const userMessages = conversation.filter(m => m.role === 'user');
+        return userMessages[userMessages.length - 1]?.text || '';
+    };
 
-        if (silenceTimerRef.current) {
-            clearInterval(silenceTimerRef.current);
-            silenceTimerRef.current = null;
-        }
-        if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-        }
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-            mediaRecorderRef.current.stop();
-        }
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop());
-        }
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current = null;
-        }
-        if (audioContextRef.current) {
-            audioContextRef.current.close();
-        }
-
-        setCallState(CALL_STATES.ENDED);
-        setProcessingStep('');
-
-        if (onCallEnd) onCallEnd({ duration: callDuration });
-    }, [callDuration, onCallEnd]);
-
-    const toggleMute = useCallback(() => {
-        setIsMuted(prev => {
-            const newMuted = !prev;
-            console.log(`🔇 Mute: ${newMuted}`);
-            if (streamRef.current) {
-                streamRef.current.getAudioTracks().forEach(track => {
-                    track.enabled = !newMuted;
-                });
-            }
-            return newMuted;
-        });
-    }, []);
-
-    useEffect(() => {
-        return () => { endCall(); };
-    }, []);
-
+    // Determinar estado visual
     const getStateInfo = () => {
-        switch (callState) {
-            case CALL_STATES.IDLE: return { text: 'Listo para llamar', color: '#666' };
-            case CALL_STATES.CONNECTING: return { text: 'Conectando...', color: '#f59e0b' };
-            case CALL_STATES.LISTENING: return { text: 'Escuchando...', color: '#10b981' };
-            case CALL_STATES.PROCESSING: return { text: processingStep || 'Procesando...', color: '#3b82f6' };
-            case CALL_STATES.SPEAKING: return { text: 'InmoBot hablando...', color: '#8b5cf6' };
-            case CALL_STATES.ENDED: return { text: 'Llamada terminada', color: '#ef4444' };
-            default: return { text: '', color: '#666' };
+        switch (connectionState) {
+            case CONNECTION_STATES.IDLE:
+                return { text: 'Listo para llamar', color: '#666', state: 'idle' };
+            case CONNECTION_STATES.CONNECTING:
+                return { text: status || 'Conectando...', color: '#f59e0b', state: 'connecting' };
+            case CONNECTION_STATES.CONNECTED:
+                // Determinar si está hablando el usuario o el bot
+                const lastMsg = conversation[conversation.length - 1];
+                if (lastMsg?.role === 'user' && !lastMsg.isFinal) {
+                    return { text: 'Escuchando...', color: '#10b981', state: 'listening' };
+                } else if (lastMsg?.role === 'assistant' && !lastMsg.isFinal) {
+                    return { text: 'InmoBot hablando...', color: '#8b5cf6', state: 'speaking' };
+                } else if (currentVolume > 0.1) {
+                    return { text: 'InmoBot hablando...', color: '#8b5cf6', state: 'speaking' };
+                }
+                return { text: 'Escuchando...', color: '#10b981', state: 'listening' };
+            case CONNECTION_STATES.ERROR:
+                return { text: 'Error de conexión', color: '#ef4444', state: 'error' };
+            default:
+                return { text: '', color: '#666', state: 'idle' };
         }
     };
 
     const stateInfo = getStateInfo();
-
-    // Agregar clase de estado al container
-    const containerClass = `voice-call-container state-${callState}`;
+    const containerClass = `voice-call-container state-${stateInfo.state}`;
 
     return (
         <div className={containerClass}>
@@ -620,17 +153,24 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
                     </button>
                     <div className="header-title">
                         <h1>InmoBot</h1>
-                        {callState !== CALL_STATES.IDLE && callState !== CALL_STATES.ENDED && (
+                        {isSessionActive && (
                             <span className="call-duration">{formatDuration(callDuration)}</span>
                         )}
                     </div>
                 </div>
+                {/* Badge de WebRTC */}
+                {isSessionActive && (
+                    <div className="webrtc-badge">
+                        <span className="badge-dot"></span>
+                        WebRTC
+                    </div>
+                )}
             </header>
 
             {/* Main Content */}
             <main className="voice-call-main">
-                {callState === CALL_STATES.IDLE || callState === CALL_STATES.ENDED ? (
-                    /* Idle State */
+                {!isSessionActive ? (
+                    /* Estado Idle */
                     <div className="idle-content">
                         <div className="avatar-section">
                             <div className="avatar-container">
@@ -643,20 +183,32 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
                         </div>
                         <h2 className="idle-title">Asistente Inmobiliario</h2>
                         <p className="idle-subtitle">
-                            Habla con InmoBot para encontrar tu propiedad ideal. Solo presiona el botón para comenzar.
+                            Habla con InmoBot en tiempo real usando OpenAI Realtime API.
+                            Latencia ultra-baja y conversación natural.
                         </p>
+                        <div className="tech-badge">
+                            <span>🚀 Powered by WebRTC + GPT-4o Realtime</span>
+                        </div>
                     </div>
                 ) : (
-                    /* Active Call State */
+                    /* Estado de llamada activa */
                     <>
                         <div className="avatar-section">
                             <div className="avatar-container">
-                                <div className="avatar-rings">
+                                {/* Anillos de animación basados en volumen */}
+                                <div className="avatar-rings" style={{
+                                    transform: `scale(${1 + currentVolume * 0.5})`,
+                                    opacity: 0.3 + currentVolume * 0.7
+                                }}>
                                     <div className="avatar-ring"></div>
                                     <div className="avatar-ring"></div>
                                     <div className="avatar-ring"></div>
                                 </div>
-                                <div className="avatar-orb">
+                                <div className="avatar-orb" style={{
+                                    boxShadow: currentVolume > 0.1
+                                        ? `0 0 ${20 + currentVolume * 40}px rgba(139, 92, 246, ${0.3 + currentVolume * 0.5})`
+                                        : undefined
+                                }}>
                                     <svg viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
                                     </svg>
@@ -665,19 +217,31 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
                         </div>
 
                         <div className="status-section">
-                            <span className="status-label">{stateInfo.text}</span>
-                            <p className="status-message">{botResponse || 'Esperando...'}</p>
-                            {processingStep && <span className="processing-step">{processingStep}</span>}
+                            <span className="status-label" style={{ color: stateInfo.color }}>
+                                {stateInfo.text}
+                            </span>
+                            <p className="status-message">
+                                {getLastBotMessage() || 'Esperando respuesta...'}
+                            </p>
                         </div>
 
-                        {currentTranscript && (
+                        {/* Transcripción del usuario */}
+                        {getLastUserMessage() && (
                             <div className="transcript-section">
                                 <div className="transcript-bubble">
                                     <span className="transcript-label">Tú dijiste</span>
-                                    <p className="transcript-text user">{currentTranscript}</p>
+                                    <p className="transcript-text user">{getLastUserMessage()}</p>
                                 </div>
                             </div>
                         )}
+
+                        {/* Indicador de volumen */}
+                        <div className="volume-indicator">
+                            <div
+                                className="volume-bar"
+                                style={{ width: `${Math.min(currentVolume * 200, 100)}%` }}
+                            />
+                        </div>
 
                         {error && (
                             <div className="error-message">
@@ -693,8 +257,8 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
 
             {/* Controls */}
             <footer className="voice-call-controls">
-                {callState === CALL_STATES.IDLE || callState === CALL_STATES.ENDED ? (
-                    <button className="control-button start-call" onClick={startCall}>
+                {!isSessionActive ? (
+                    <button className="control-button start-call" onClick={handleStartCall}>
                         <PhoneIcon />
                     </button>
                 ) : (
@@ -706,7 +270,7 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
                             {isMuted ? <MicOffIcon /> : <MicOnIcon />}
                         </button>
 
-                        <button className="control-button end-call" onClick={endCall}>
+                        <button className="control-button end-call" onClick={handleEndCall}>
                             <PhoneOffIcon />
                         </button>
                     </>
@@ -717,4 +281,3 @@ const VoiceCall = ({ sessionId: initialSessionId, onCallEnd, onMessage }) => {
 };
 
 export default VoiceCall;
-
