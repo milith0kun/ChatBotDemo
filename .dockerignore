@@ -1,0 +1,33 @@
+# Ignorar archivos no necesarios para el build
+
+# Git
+.git
+.gitignore
+
+# Frontend (no necesario para el backend)
+frontend/node_modules
+frontend/dist
+frontend/.env
+frontend/.env.local
+
+# Backend virtualenv
+backend/venv
+backend/__pycache__
+backend/modules/__pycache__
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Documentación
+*.md
+!backend/README.md
+
+# Archivos de desarrollo
+.claude/
+*.log
+
+# Archivos de deploy locales
+deploy.sh
