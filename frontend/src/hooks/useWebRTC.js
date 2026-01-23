@@ -4,6 +4,9 @@
  */
 import { useState, useRef, useEffect, useCallback } from 'react';
 
+// URL del API backend
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 // Estados de la conexión
 const CONNECTION_STATES = {
     IDLE: 'idle',
@@ -71,7 +74,7 @@ export default function useWebRTC(options = {}) {
      */
     const getEphemeralToken = async () => {
         try {
-            const response = await fetch('/api/realtime/session', {
+            const response = await fetch(`${API_URL}/api/realtime/session`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
