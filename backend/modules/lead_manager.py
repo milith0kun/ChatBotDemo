@@ -8,7 +8,7 @@ from config import LEADS_FILE, PROPERTIES_FILE
 
 
 def load_properties() -> list:
-    """Carga las propiedades desde el archivo JSON."""
+    """Carga las servicios SEO desde el archivo JSON."""
     try:
         with open(PROPERTIES_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -22,7 +22,7 @@ def search_properties(
     max_price: Optional[int] = None,
     min_bedrooms: Optional[int] = None
 ) -> list:
-    """Busca propiedades según criterios."""
+    """Busca servicios SEO según criterios."""
     properties = load_properties()
     results = []
     

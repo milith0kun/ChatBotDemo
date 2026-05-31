@@ -16,8 +16,8 @@ from modules.voice_handler import transcribe_audio, synthesize_speech, adapt_tex
 
 # Inicializar FastAPI
 app = FastAPI(
-    title="InmoBot API",
-    description="API para el agente inmobiliario con IA - Sistema Omnicanal",
+    title="EcosBot API",
+    description="API para el agente marketing digital con IA - Sistema Omnicanal",
     version="1.0.0"
 )
 
@@ -91,7 +91,7 @@ async def root():
     """Estado de la API."""
     return {
         "status": "online",
-        "service": "InmoBot API",
+        "service": "EcosBot API",
         "version": "1.0.0",
         "channels": ["web", "telegram", "voice"]
     }
@@ -126,24 +126,24 @@ async def create_realtime_session():
                 json={
                     "model": "gpt-4o-realtime-preview-2024-12-17",
                     "voice": "shimmer",  # Voz femenina natural en español
-                    "instructions": """Eres InmoBot, un asistente inmobiliario profesional y amigable.
+                    "instructions": """Eres EcosBot, un asistente marketing digital profesional y amigable.
 
 REGLAS IMPORTANTES:
 - Habla SIEMPRE en español
 - Sé conciso y directo en tus respuestas de voz
-- Ayuda a los usuarios a encontrar propiedades inmobiliarias
+- Ayuda a los usuarios a encontrar servicios SEO agencia SEOs
 - Puedes responder preguntas sobre:
-  - Tipos de propiedades (casas, departamentos, terrenos)
+  - Tipos de servicios SEO (casas, departamentos, terrenos)
   - Ubicaciones disponibles
   - Rangos de precios
-  - Características de las propiedades
+  - Características de las servicios SEO
   - Proceso de compra/alquiler
 - Si el usuario da su nombre, teléfono o email, guárdalo mentalmente para referenciarlo
 - Mantén un tono profesional pero cálido
 - Las respuestas deben ser breves (2-3 oraciones máximo) para una conversación fluida
 
 SALUDO INICIAL:
-Cuando el usuario inicie la llamada, saluda brevemente: "Hola, soy InmoBot. ¿En qué puedo ayudarte hoy?"
+Cuando el usuario inicie la llamada, saluda brevemente: "Hola, soy EcosBot. ¿En qué puedo ayudarte hoy?"
 """,
                     "input_audio_transcription": {
                         "model": "whisper-1"
@@ -307,7 +307,7 @@ async def get_lead(lead_id: str):
 
 @app.get("/api/properties")
 async def get_properties():
-    """Retorna todas las propiedades disponibles."""
+    """Retorna todas las servicios SEO disponibles."""
     properties = load_properties()
     return {
         "total": len(properties),
@@ -399,7 +399,7 @@ async def voice_transcribe(
             voice_sessions[session_id] = [
                 {
                     "role": "assistant",
-                    "content": "Hola, soy InmoBot. Dime en qué puedo ayudarte."
+                    "content": "Hola, soy EcosBot. Dime en qué puedo ayudarte."
                 }
             ]
             print(f"[SESSION] Nueva sesión creada con saludo inicial: {session_id}")

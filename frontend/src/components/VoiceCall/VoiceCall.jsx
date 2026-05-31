@@ -126,9 +126,9 @@ const VoiceCall = ({ onCallEnd, onMessage }) => {
                 if (lastMsg?.role === 'user' && !lastMsg.isFinal) {
                     return { text: 'Escuchando...', color: '#10b981', state: 'listening' };
                 } else if (lastMsg?.role === 'assistant' && !lastMsg.isFinal) {
-                    return { text: 'InmoBot hablando...', color: '#8b5cf6', state: 'speaking' };
+                    return { text: 'EcosBot hablando...', color: '#8b5cf6', state: 'speaking' };
                 } else if (currentVolume > 0.1) {
-                    return { text: 'InmoBot hablando...', color: '#8b5cf6', state: 'speaking' };
+                    return { text: 'EcosBot hablando...', color: '#8b5cf6', state: 'speaking' };
                 }
                 return { text: 'Escuchando...', color: '#10b981', state: 'listening' };
             case CONNECTION_STATES.ERROR:
@@ -152,7 +152,7 @@ const VoiceCall = ({ onCallEnd, onMessage }) => {
                         </svg>
                     </button>
                     <div className="header-title">
-                        <h1>InmoBot</h1>
+                        <h1>EcosBot</h1>
                         {isSessionActive && (
                             <span className="call-duration">{formatDuration(callDuration)}</span>
                         )}
@@ -181,9 +181,9 @@ const VoiceCall = ({ onCallEnd, onMessage }) => {
                                 </div>
                             </div>
                         </div>
-                        <h2 className="idle-title">Asistente Inmobiliario</h2>
+                        <h2 className="idle-title">Asistente SEO y Marketing</h2>
                         <p className="idle-subtitle">
-                            Habla con InmoBot en tiempo real usando OpenAI Realtime API.
+                            Habla con EcosBot en tiempo real usando OpenAI Realtime API.
                             Latencia ultra-baja y conversación natural.
                         </p>
                         <div className="tech-badge">

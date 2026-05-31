@@ -1,5 +1,5 @@
 """
-Módulo de manejo de voz para InmoBot
+Módulo de manejo de voz para EcosBot
 Soporta Deepgram (económico) y OpenAI como fallback
 Deepgram: $200 créditos gratis, $0.0077/min STT, $0.015/1000 chars TTS
 OpenAI: $0.006/min Whisper, ~$0.015/1000 chars TTS

@@ -58,7 +58,7 @@ export const getLeadById = async (leadId) => {
 };
 
 /**
- * Obtiene todas las propiedades
+ * Obtiene todas las servicios SEO
  * @returns {Promise<{total: number, properties: array}>}
  */
 export const getProperties = async () => {

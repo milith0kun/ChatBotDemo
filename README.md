@@ -1,6 +1,6 @@
-# 🏠 InmoBot AI - Agente Inmobiliario con IA
+# 🏠 EcosBot AI - Agente SEO y Marketing con IA
 
-Sistema omnicanal de chatbot inmobiliario potenciado por IA, con soporte para chat web, Telegram y voz.
+Sistema omnicanal de chatbot marketing digital potenciado por IA, con soporte para chat web, Telegram y voz.
 
 ![Status](https://img.shields.io/badge/status-production-green)
 ![Python](https://img.shields.io/badge/python-3.11-blue)
@@ -9,11 +9,11 @@ Sistema omnicanal de chatbot inmobiliario potenciado por IA, con soporte para ch
 
 ## 📋 Descripción
 
-InmoBot AI es un asistente inmobiliario inteligente que permite a clientes potenciales:
+EcosBot AI es un asistente marketing digital inteligente que permite a clientes potenciales:
 
 - 💬 Chatear con un agente de IA por **Web**, **Telegram** o **Voz**
 - 🎯 Ser cualificados de forma natural (sin formularios)
-- 🏡 Recibir recomendaciones de propiedades según sus necesidades
+- 🏡 Recibir recomendaciones de servicios SEO según sus necesidades
 - 📊 Captura automática de leads con clasificación inteligente
 
 ## 🛠️ Stack Tecnológico
@@ -53,7 +53,7 @@ ChatBotDemo/
 │   │   ├── voice_handler.py # Procesamiento de voz
 │   │   └── telegram_bot.py  # Integración Telegram
 │   └── data/
-│       ├── properties.json  # Catálogo de propiedades
+│       ├── properties.json  # Catálogo de servicios SEO
 │       └── leads.json       # Leads capturados
 │
 ├── frontend/
@@ -149,7 +149,7 @@ npm run dev
 |--------|----------|-------------|
 | GET | `/api/leads` | Listar todos los leads |
 | GET | `/api/leads/{id}` | Obtener lead específico |
-| GET | `/api/properties` | Listar propiedades |
+| GET | `/api/properties` | Listar servicios SEO |
 
 ### Telegram
 | Método | Endpoint | Descripción |
@@ -168,14 +168,14 @@ npm run dev
 
 ### Escenario 1: Ver Catálogo
 ```
-Usuario: "Hola, quiero ver qué propiedades tienen"
+Usuario: "Hola, quiero ver qué servicios SEO tienen"
 Bot: [Muestra catálogo completo con precios]
 ```
 
 ### Escenario 2: Búsqueda Específica
 ```
 Usuario: "Busco departamento en San Isidro, tengo 260 mil dólares"
-Bot: [Recomienda propiedades que encajen]
+Bot: [Recomienda servicios SEO que encajen]
 ```
 
 ### Escenario 3: Captura de Lead
@@ -207,13 +207,13 @@ Bot: [Confirma y guarda datos]
 ```bash
 # Frontend
 cd frontend
-docker build --build-arg VITE_API_URL=https://tu-api.com -t inmobot-frontend .
-docker run -p 80:80 inmobot-frontend
+docker build --build-arg VITE_API_URL=https://tu-api.com -t ecosbot-frontend .
+docker run -p 80:80 ecosbot-frontend
 
 # Backend
 cd backend
-docker build -t inmobot-backend .
-docker run -p 8000:8000 --env-file .env inmobot-backend
+docker build -t ecosbot-backend .
+docker run -p 8000:8000 --env-file .env ecosbot-backend
 ```
 
 ### Variables de Producción

@@ -75,8 +75,8 @@ const Header = () => {
                 <Link to="/" className="header-brand" onClick={closeMobileMenu}>
 
                     <div className="header-brand-text">
-                        <h1 className="header-title">InmoBot</h1>
-                        <p className="header-subtitle">Asistente Inmobiliario</p>
+                        <h1 className="header-title">EcosBot</h1>
+                        <p className="header-subtitle">Asistente SEO y Marketing</p>
                     </div>
                 </Link>
 
