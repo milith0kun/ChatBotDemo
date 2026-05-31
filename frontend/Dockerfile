@@ -36,6 +36,6 @@ COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 RUN ls -la /usr/share/nginx/html/ && \
     ls -la /usr/share/nginx/html/assets/ || echo "No assets folder"
 
-EXPOSE 80
+EXPOSE 3000
 
 CMD ["nginx", "-g", "daemon off;"]
