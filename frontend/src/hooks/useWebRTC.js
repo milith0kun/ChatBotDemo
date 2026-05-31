@@ -293,6 +293,11 @@ export default function useWebRTC(options = {}) {
      * Iniciar sesión WebRTC
      */
     const startSession = useCallback(async () => {
+        if (isSessionActive || peerConnectionRef.current) {
+            console.log('[WebRTC] Sesión ya activa o conectando');
+            return;
+        }
+
         try {
             updateConnectionState(CONNECTION_STATES.CONNECTING);
             updateStatus('Solicitando acceso al micrófono...');
@@ -325,21 +330,28 @@ export default function useWebRTC(options = {}) {
 
             // Manejar audio entrante del asistente
             pc.ontrack = (event) => {
-                console.log('[WebRTC] Track recibido');
-                audioEl.srcObject = event.streams[0];
+                console.log('[WebRTC] Track recibido', event.track.kind);
+                if (event.track.kind !== 'audio') return;
 
-                // Configurar análisis de volumen
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const src = audioCtx.createMediaStreamSource(event.streams[0]);
-                const analyser = audioCtx.createAnalyser();
-                analyser.fftSize = 256;
-                src.connect(analyser);
-                analyserRef.current = analyser;
+                if (audioEl.srcObject !== event.streams[0]) {
+                    audioEl.srcObject = event.streams[0];
+                }
 
-                // Monitorear volumen
-                volumeIntervalRef.current = setInterval(() => {
-                    setCurrentVolume(getVolume());
-                }, 100);
+                if (!analyserRef.current) {
+                    // Configurar análisis de volumen
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    audioContextRef.current = audioCtx; // Guardar referencia para cleanup
+                    const src = audioCtx.createMediaStreamSource(event.streams[0]);
+                    const analyser = audioCtx.createAnalyser();
+                    analyser.fftSize = 256;
+                    src.connect(analyser);
+                    analyserRef.current = analyser;
+
+                    // Monitorear volumen
+                    volumeIntervalRef.current = setInterval(() => {
+                        setCurrentVolume(getVolume());
+                    }, 100);
+                }
             };
 
             // Crear canal de datos para transcripciones
@@ -432,6 +444,8 @@ export default function useWebRTC(options = {}) {
 
         // Limpiar elemento de audio
         if (audioElementRef.current) {
+            audioElementRef.current.pause();
+            audioElementRef.current.removeAttribute('src');
             audioElementRef.current.srcObject = null;
             audioElementRef.current = null;
         }
