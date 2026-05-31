@@ -501,4 +501,5 @@ async def voice_synthesize(request: VoiceSynthesisRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=PORT)
+    # Forzar puerto 3000 para Dokploy
+    uvicorn.run(app, host="0.0.0.0", port=3000)
