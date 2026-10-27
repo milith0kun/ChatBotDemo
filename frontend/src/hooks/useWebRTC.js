@@ -381,11 +381,8 @@ export default function useWebRTC(options = {}) {
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
 
-            // Enviar oferta a OpenAI
-            const baseUrl = 'https://api.openai.com/v1/realtime';
-            const model = activeModelRef.current || 'gpt-realtime';
-
-            const response = await fetch(`${baseUrl}?model=${model}&voice=${voice}`, {
+            // Enviar oferta a OpenAI Realtime API (endpoint GA /v1/realtime/calls)
+            const response = await fetch('https://api.openai.com/v1/realtime/calls', {
                 method: 'POST',
                 body: offer.sdp,
                 headers: {
