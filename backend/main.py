@@ -421,28 +421,10 @@ async def whatsapp_enviar_mensaje(request: WhatsAppMessageRequest):
     return await enviar_mensaje_whatsapp(request.numero, request.mensaje)
 
 
-@app.post("/api/whatsapp/webhook")
-async def whatsapp_webhook(request: Request):
-    """
-    Webhook receptor para Evolution API v2.
-    Procesa mensajes entrantes de clientes, ejecuta el agente inmobiliario IA y responde.
-    """
+async def procesar_y_responder_whatsapp_async(remitente_jid: str, telefono: str, nombre: str, texto: str):
+    """Procesa el mensaje con el agente IA, actualiza el lead y responde por WhatsApp."""
     try:
-        datos = await request.json()
-        print(f"[WHATSAPP WEBHOOK] Evento recibido: {datos.get('event')}")
-
-        mensaje_datos = extraer_datos_mensaje_whatsapp(datos)
-        if not mensaje_datos:
-            # Mensaje propio, grupo o no procesable
-            return {"ok": True, "ignorado": True}
-
-        remitente_jid = mensaje_datos["remitente_jid"]
-        telefono = mensaje_datos["telefono"]
-        nombre = mensaje_datos["nombre"]
-        texto = mensaje_datos["texto"]
-
         id_sesion = f"whatsapp_{telefono}"
-
         if id_sesion not in whatsapp_conversations:
             whatsapp_conversations[id_sesion] = []
 
@@ -476,7 +458,40 @@ async def whatsapp_webhook(request: Request):
         resultado_envio = await enviar_mensaje_whatsapp(remitente_jid, respuesta_ia)
         print(f"[WHATSAPP WEBHOOK] Respuesta enviada a {telefono}: {resultado_envio.get('ok')}")
 
-        return {"ok": True, "respuesta_enviada": resultado_envio.get("ok")}
+    except Exception as error_async:
+        print(f"[WHATSAPP WEBHOOK ASYNC ERROR]: {error_async}")
+
+
+@app.post("/api/whatsapp/webhook")
+async def whatsapp_webhook(request: Request):
+    """
+    Webhook receptor para Evolution API v2.
+    Procesa mensajes entrantes de clientes, ejecuta el agente inmobiliario IA y responde.
+    """
+    try:
+        datos = await request.json()
+        print(f"[WHATSAPP WEBHOOK] Evento recibido: {datos.get('event')}")
+
+        mensaje_datos = extraer_datos_mensaje_whatsapp(datos)
+        if not mensaje_datos:
+            # Mensaje propio, grupo o no procesable
+            return {"ok": True, "ignorado": True}
+
+        remitente_jid = mensaje_datos["remitente_jid"]
+        telefono = mensaje_datos["telefono"]
+        nombre = mensaje_datos["nombre"]
+        texto = mensaje_datos["texto"]
+
+        # Procesar en segundo plano para responder de inmediato a Evolution API
+        asyncio.create_task(
+            procesar_y_responder_whatsapp_async(remitente_jid, telefono, nombre, texto)
+        )
+
+        return {"ok": True, "procesando": True}
+
+    except Exception as error_webhook:
+        print(f"[WHATSAPP WEBHOOK ERROR]: {error_webhook}")
+        return {"ok": False, "error": str(error_webhook)}
 
     except Exception as error_webhook:
         print(f"[WHATSAPP WEBHOOK ERROR]: {error_webhook}")
