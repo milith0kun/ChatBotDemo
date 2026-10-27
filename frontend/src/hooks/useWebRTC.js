@@ -85,7 +85,7 @@ export default function useWebRTC(options = {}) {
             }
 
             const data = await response.json();
-            return data.client_secret?.value || data.client_secret;
+            return data.value || data.client_secret?.value || data.client_secret;
         } catch (err) {
             console.error('[WebRTC] Error obteniendo token:', err);
             throw err;
@@ -391,7 +391,9 @@ export default function useWebRTC(options = {}) {
             });
 
             if (!response.ok) {
-                throw new Error(`Error de conexión: ${response.status}`);
+                const errorText = await response.text().catch(() => '');
+                console.error(`[WebRTC] Error handshake SDP OpenAI (${response.status}):`, errorText);
+                throw new Error(`Error de conexión con OpenAI (${response.status}): ${errorText}`);
             }
 
             // Establecer respuesta SDP

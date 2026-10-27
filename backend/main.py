@@ -109,8 +109,7 @@ async def health_check():
 async def create_realtime_session():
     """
     Crea una sesión efímera para OpenAI Realtime API con WebRTC.
-    Retorna un token que expira en 60 segundos.
-    Este token se usa en el cliente para establecer la conexión WebRTC.
+    Retorna un token (client_secret) para la conexión WebRTC del cliente.
     """
     try:
         if not OPENAI_API_KEY:
@@ -118,41 +117,44 @@ async def create_realtime_session():
         
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "https://api.openai.com/v1/realtime/sessions",
+                "https://api.openai.com/v1/realtime/client_secrets",
                 headers={
                     "Authorization": f"Bearer {OPENAI_API_KEY}",
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "gpt-4o-realtime-preview-2024-12-17",
-                    "voice": "shimmer",  # Voz femenina natural en español
-                    "instructions": """Eres EcosBot, un asistente marketing digital profesional y amigable.
+                    "expires_after": {
+                        "anchor": "created_at",
+                        "seconds": 600
+                    },
+                    "session": {
+                        "type": "realtime",
+                        "model": "gpt-4o-realtime-preview-2024-12-17",
+                        "voice": "shimmer",  # Voz femenina natural en español
+                        "instructions": """Eres un asistente inmobiliario virtual profesional y amigable.
 
 REGLAS IMPORTANTES:
 - Habla SIEMPRE en español
 - Sé conciso y directo en tus respuestas de voz
-- Ayuda a los usuarios a encontrar servicios SEO agencia SEOs
+- Ayuda a los usuarios a encontrar la propiedad o inmueble ideal (apartamentos, villas, chalets, casas)
 - Puedes responder preguntas sobre:
-  - Tipos de servicios SEO (casas, departamentos, terrenos)
-  - Ubicaciones disponibles
-  - Rangos de precios
-  - Características de las servicios SEO
-  - Proceso de compra/alquiler
-- Si el usuario da su nombre, teléfono o email, guárdalo mentalmente para referenciarlo
+  - Tipos de propiedades (apartamentos, villas, chalets, casas rurales)
+  - Ubicaciones disponibles (Costa del Sol, Alicante, Marbella, Valencia, Madrid, etc.)
+  - Rangos de precios y características
+  - Proceso de compra o alquiler
+- Si el usuario da su nombre, teléfono o email, tómalo en cuenta para el seguimiento comercial
 - Mantén un tono profesional pero cálido
-- Las respuestas deben ser breves (2-3 oraciones máximo) para una conversación fluida
+- Las respuestas deben ser breves (2-3 oraciones máximo) para una conversación telefónica fluida
 
 SALUDO INICIAL:
-Cuando el usuario inicie la llamada, saluda brevemente: "Hola, soy EcosBot. ¿En qué puedo ayudarte hoy?"
+Cuando el usuario inicie la llamada, saluda brevemente: "Hola, soy tu asistente inmobiliario. ¿En qué propiedad o zona estás interesado?"
 """,
-                    "input_audio_transcription": {
-                        "model": "whisper-1"
-                    },
-                    "turn_detection": {
-                        "type": "server_vad",
-                        "threshold": 0.5,
-                        "prefix_padding_ms": 300,
-                        "silence_duration_ms": 500
+                        "turn_detection": {
+                            "type": "server_vad",
+                            "threshold": 0.5,
+                            "prefix_padding_ms": 300,
+                            "silence_duration_ms": 500
+                        }
                     }
                 },
                 timeout=10.0
@@ -169,8 +171,18 @@ Cuando el usuario inicie la llamada, saluda brevemente: "Hola, soy EcosBot. ¿En
         session_data = response.json()
         print(f"[REALTIME] Sesión creada exitosamente")
         
+        # Compatibilidad: mapear client_secret para el frontend
+        token_value = session_data.get("value") or session_data.get("client_secret", {}).get("value")
+        if token_value and "client_secret" not in session_data:
+            session_data["client_secret"] = {
+                "value": token_value,
+                "expires_at": session_data.get("expires_at")
+            }
+        
         return session_data
         
+    except HTTPException:
+        raise
     except httpx.TimeoutException:
         raise HTTPException(status_code=504, detail="Timeout al conectar con OpenAI")
     except Exception as e:
@@ -307,7 +319,7 @@ async def get_lead(lead_id: str):
 
 @app.get("/api/properties")
 async def get_properties():
-    """Retorna todas las servicios SEO disponibles."""
+    """Retorna todas las propiedades disponibles."""
     properties = load_properties()
     return {
         "total": len(properties),
