@@ -105,6 +105,17 @@ async def health_check():
 
 # ==================== OPENAI REALTIME API ====================
 
+# Modelos candidatos para OpenAI Realtime (con fallback automático según acceso de cuenta)
+CANDIDATE_REALTIME_MODELS = [
+    os.getenv("REALTIME_MODEL", "").strip(),
+    "gpt-realtime",
+    "gpt-realtime-mini",
+    "gpt-4o-realtime-preview",
+    "gpt-4o-mini-realtime-preview"
+]
+CANDIDATE_REALTIME_MODELS = [m for m in dict.fromkeys(CANDIDATE_REALTIME_MODELS) if m]
+
+
 @app.post("/api/realtime/session")
 async def create_realtime_session():
     """
@@ -115,23 +126,29 @@ async def create_realtime_session():
         if not OPENAI_API_KEY:
             raise HTTPException(status_code=500, detail="OPENAI_API_KEY no configurada")
         
+        session_data = None
+        last_error_text = ""
+        last_status_code = 500
+
         async with httpx.AsyncClient() as client:
-            response = await client.post(
-                "https://api.openai.com/v1/realtime/client_secrets",
-                headers={
-                    "Authorization": f"Bearer {OPENAI_API_KEY}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "expires_after": {
-                        "anchor": "created_at",
-                        "seconds": 600
+            for model_name in CANDIDATE_REALTIME_MODELS:
+                print(f"[REALTIME] Intentando crear sesión con modelo: {model_name}")
+                response = await client.post(
+                    "https://api.openai.com/v1/realtime/client_secrets",
+                    headers={
+                        "Authorization": f"Bearer {OPENAI_API_KEY}",
+                        "Content-Type": "application/json"
                     },
-                    "session": {
-                        "type": "realtime",
-                        "model": "gpt-4o-realtime-preview-2024-12-17",
-                        "voice": "shimmer",  # Voz femenina natural en español
-                        "instructions": """Eres un asistente inmobiliario virtual profesional y amigable.
+                    json={
+                        "expires_after": {
+                            "anchor": "created_at",
+                            "seconds": 600
+                        },
+                        "session": {
+                            "type": "realtime",
+                            "model": model_name,
+                            "voice": "shimmer",  # Voz femenina natural en español
+                            "instructions": """Eres un asistente inmobiliario virtual profesional y amigable.
 
 REGLAS IMPORTANTES:
 - Habla SIEMPRE en español
@@ -149,27 +166,34 @@ REGLAS IMPORTANTES:
 SALUDO INICIAL:
 Cuando el usuario inicie la llamada, saluda brevemente: "Hola, soy tu asistente inmobiliario. ¿En qué propiedad o zona estás interesado?"
 """,
-                        "turn_detection": {
-                            "type": "server_vad",
-                            "threshold": 0.5,
-                            "prefix_padding_ms": 300,
-                            "silence_duration_ms": 500
+                            "turn_detection": {
+                                "type": "server_vad",
+                                "threshold": 0.5,
+                                "prefix_padding_ms": 300,
+                                "silence_duration_ms": 500
+                            }
                         }
-                    }
-                },
-                timeout=10.0
-            )
-        
-        if response.status_code != 200:
-            error_text = response.text
-            print(f"[REALTIME] Error de OpenAI: {response.status_code} - {error_text}")
+                    },
+                    timeout=10.0
+                )
+
+                if response.status_code == 200:
+                    session_data = response.json()
+                    print(f"[REALTIME] Sesión creada exitosamente con modelo '{model_name}'")
+                    break
+                else:
+                    last_status_code = response.status_code
+                    last_error_text = response.text
+                    print(f"[REALTIME] Modelo '{model_name}' falló ({last_status_code}): {last_error_text}")
+                    # Si no es error de modelo inexistente o sin acceso, no continuar probando otros
+                    if "model" not in last_error_text.lower():
+                        break
+
+        if not session_data:
             raise HTTPException(
-                status_code=response.status_code, 
-                detail=f"Error de OpenAI Realtime API: {error_text}"
+                status_code=last_status_code, 
+                detail=f"Error de OpenAI Realtime API: {last_error_text}"
             )
-        
-        session_data = response.json()
-        print(f"[REALTIME] Sesión creada exitosamente")
         
         # Compatibilidad: mapear client_secret para el frontend
         token_value = session_data.get("value") or session_data.get("client_secret", {}).get("value")

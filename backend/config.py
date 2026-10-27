@@ -1,7 +1,17 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+# Cargar variables de entorno (busca en backend/ y en la raíz del proyecto)
+_backend_dir = os.path.dirname(os.path.abspath(__file__))
+_root_dir = os.path.dirname(_backend_dir)
+for _env_file in [
+    os.path.join(_backend_dir, ".env"),
+    os.path.join(_backend_dir, ".env.local"),
+    os.path.join(_root_dir, ".env.local"),
+    os.path.join(_root_dir, ".env")
+]:
+    if os.path.exists(_env_file):
+        load_dotenv(_env_file)
 
 # OpenAI Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")

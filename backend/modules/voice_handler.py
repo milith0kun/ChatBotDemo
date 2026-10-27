@@ -13,7 +13,7 @@ from openai import OpenAI
 from config import OPENAI_API_KEY, DEEPGRAM_API_KEY, VOICE_PROVIDER
 
 # Inicializar cliente OpenAI
-openai_client = OpenAI(api_key=OPENAI_API_KEY)
+openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 
 
 def clean_transcript(text: str) -> str:

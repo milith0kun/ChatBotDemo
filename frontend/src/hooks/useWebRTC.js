@@ -56,6 +56,7 @@ export default function useWebRTC(options = {}) {
 
     // Para tracking de mensajes efímeros del usuario
     const ephemeralUserIdRef = useRef(null);
+    const activeModelRef = useRef('gpt-realtime');
 
     // Actualizar estado de conexión
     const updateConnectionState = useCallback((state) => {
@@ -85,6 +86,9 @@ export default function useWebRTC(options = {}) {
             }
 
             const data = await response.json();
+            if (data.session?.model) {
+                activeModelRef.current = data.session.model;
+            }
             return data.value || data.client_secret?.value || data.client_secret;
         } catch (err) {
             console.error('[WebRTC] Error obteniendo token:', err);
@@ -379,7 +383,7 @@ export default function useWebRTC(options = {}) {
 
             // Enviar oferta a OpenAI
             const baseUrl = 'https://api.openai.com/v1/realtime';
-            const model = 'gpt-4o-realtime-preview-2024-12-17';
+            const model = activeModelRef.current || 'gpt-realtime';
 
             const response = await fetch(`${baseUrl}?model=${model}&voice=${voice}`, {
                 method: 'POST',
