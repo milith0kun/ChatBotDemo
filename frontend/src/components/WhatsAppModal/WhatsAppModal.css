@@ -89,11 +89,11 @@
 
 /* ==================== CUERPO DEL MODAL ==================== */
 .cuerpo-modal-whatsapp {
-    padding: 22px 24px 26px 24px;
+    padding: 16px 20px 20px 20px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    max-height: 85vh;
+    gap: 12px;
+    max-height: 90vh;
     overflow-y: auto;
 }
 

@@ -149,16 +149,16 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
             }
         }, 5000);
 
-        // Auto-refresco del QR cada 18 segundos para que nunca caduque
+        // Auto-refresco del QR cada 35 segundos (tiempo prudencial para enfocar sin interrupciones)
         const intervaloQr = setInterval(() => {
             if (!estaConectado) {
                 refrescarQr(false);
             }
-        }, 18000);
+        }, 35000);
 
         // Contador regresivo visual
         const intervaloCuenta = setInterval(() => {
-            setContadorRefresco(prev => (prev > 1 ? prev - 1 : 18));
+            setContadorRefresco(prev => (prev > 1 ? prev - 1 : 35));
         }, 1000);
 
         return () => {
@@ -210,7 +210,7 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
     if (!estaAbierto) return null;
 
     return (
-        <div className="modal-fondo-whatsapp" onClick={alCerrar}>
+        <div className="modal-fondo-whatsapp">
             <div className="modal-tarjeta-whatsapp" onClick={(e) => e.stopPropagation()}>
                 {/* Cabecera del Modal */}
                 <div className="cabecera-modal-whatsapp">
@@ -334,13 +334,7 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
                         <div className="seccion-qr-whatsapp">
                             <div className="instrucciones-vinculacion-whatsapp">
                                 <p className="paso-instruccion-whatsapp">
-                                    <strong>1.</strong> Abre <strong>WhatsApp</strong> en tu teléfono móvil.
-                                </p>
-                                <p className="paso-instruccion-whatsapp">
-                                    <strong>2.</strong> Toca <strong>Menú (⋮)</strong> o <strong>Ajustes</strong> ➔ <strong>Dispositivos vinculados</strong>.
-                                </p>
-                                <p className="paso-instruccion-whatsapp">
-                                    <strong>3.</strong> Toca <strong>Vincular un dispositivo</strong> y apunta tu cámara al código:
+                                    Abre <strong>WhatsApp</strong> ➔ <strong>Dispositivos vinculados</strong> ➔ <strong>Vincular un dispositivo</strong> y apunta al código:
                                 </p>
                             </div>
 
@@ -349,7 +343,7 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
                                 {reiniciando ? (
                                     <div className="qr-cargando-estado">
                                         <div className="animacion-giro-whatsapp" />
-                                        <p>Restableciendo sesión limpia...</p>
+                                        <p>Generando sesión limpia en Evolution API...</p>
                                     </div>
                                 ) : codigoQrBase64 ? (
                                     <div className="imagen-qr-contenedor">
@@ -361,7 +355,24 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
                                     </div>
                                 ) : (
                                     <div className="qr-marcador-posicion">
-                                        <p>Generando código QR en vivo...</p>
+                                        <div className="animacion-giro-whatsapp" />
+                                        <p style={{ textAlign: 'center', maxWidth: '240px', lineHeight: 1.4 }}>
+                                            Esperando código QR de Evolution API...
+                                        </p>
+                                        <a
+                                            href="https://cgbacademyti-evolutionapi-b4df35-72-60-114-137.sslip.io/manager/"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style={{
+                                                fontSize: '11.5px',
+                                                color: '#0d4f4f',
+                                                textDecoration: 'underline',
+                                                fontWeight: 600,
+                                                marginTop: '4px'
+                                            }}
+                                        >
+                                            Abrir Manager de Evolution API
+                                        </a>
                                     </div>
                                 )}
                             </div>
