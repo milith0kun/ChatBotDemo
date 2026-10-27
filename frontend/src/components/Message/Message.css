@@ -34,16 +34,18 @@
 }
 
 .message-user .message-avatar {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-    color: white;
-    box-shadow: 0 4px 12px var(--primary-glow);
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: #f1f5f9;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
 }
 
 .message-bot .message-avatar {
-    background: var(--surface-primary);
-    color: var(--primary);
-    border: 1px solid var(--border-light);
-    box-shadow: var(--shadow-sm);
+    background: linear-gradient(135deg, #093636 0%, #0d4f4f 100%);
+    color: #c4a35a;
+    border: 1px solid rgba(196, 163, 90, 0.35);
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(13, 79, 79, 0.18);
 }
 
 /* ==================== MESSAGE BODY ==================== */
@@ -155,7 +157,8 @@
     color: white;
 }
 
-.audio-play-btn .audio-spinner {
+.audio-play-btn .audio-spinner,
+.audio-spinner-svg {
     animation: spin 1s linear infinite;
 }
 

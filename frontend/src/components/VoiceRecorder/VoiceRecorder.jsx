@@ -313,8 +313,9 @@ const VoiceRecorder = ({ onVoiceMessage, sessionId, disabled = false }) => {
                     className="stop-playback-btn"
                     onClick={stopPlayback}
                     title="Detener reproducción"
+                    type="button"
                 >
-                    ⏹
+                    <StopIcon />
                 </button>
             )}
 

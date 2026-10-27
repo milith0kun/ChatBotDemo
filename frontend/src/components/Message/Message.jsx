@@ -6,6 +6,51 @@ import './Message.css';
 // Evento global para detener todos los audios
 const STOP_ALL_AUDIO_EVENT = 'stopAllAudio';
 
+// ==================== ICONOS SVG VECTORIALES DE ALTA GAMA ====================
+
+const IconoUsuario = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+    </svg>
+);
+
+const IconoInmoBot = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
+        <path d="M9 21V12h6v9" />
+        <path d="M12 7.5v.01" />
+    </svg>
+);
+
+const IconoPlayAudio = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+        <polygon points="5 3 19 12 5 21 5 3" />
+    </svg>
+);
+
+const IconoStopAudio = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+        <rect x="5" y="5" width="14" height="14" rx="2" />
+    </svg>
+);
+
+const IconoMicrofonoNota = () => (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+        <line x1="12" y1="19" x2="12" y2="23" />
+    </svg>
+);
+
+const IconoSpinner = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="audio-spinner-svg">
+        <circle cx="12" cy="12" r="10" strokeDasharray="60" strokeDashoffset="20" strokeLinecap="round" />
+    </svg>
+);
+
+// ==================== COMPONENTE MENSAJE ====================
+
 const Message = ({ content, role, timestamp, isVoice = false, showAudioButton = false }) => {
     const isUser = role === 'user';
     const [isPlaying, setIsPlaying] = useState(false);
@@ -39,7 +84,6 @@ const Message = ({ content, role, timestamp, isVoice = false, showAudioButton = 
     // Reproducir audio de la respuesta
     const handlePlayAudio = async () => {
         if (isPlaying) {
-            // Detener si ya está reproduciendo
             if (audioRef.current) {
                 audioRef.current.pause();
                 audioRef.current.currentTime = 0;
@@ -48,7 +92,6 @@ const Message = ({ content, role, timestamp, isVoice = false, showAudioButton = 
             return;
         }
 
-        // Emitir evento para detener otros audios
         window.dispatchEvent(new CustomEvent(STOP_ALL_AUDIO_EVENT));
 
         setIsLoadingAudio(true);
@@ -78,18 +121,17 @@ const Message = ({ content, role, timestamp, isVoice = false, showAudioButton = 
     };
 
     return (
-        <div className={`message ${isUser ? 'user' : 'bot'}`}>
-            <div className="message-avatar">
-                {isUser ? '👤' : '🏠'}
+        <div className={`message ${isUser ? 'message-user' : 'message-bot'}`}>
+            <div className="message-avatar" aria-hidden="true">
+                {isUser ? <IconoUsuario /> : <IconoInmoBot />}
             </div>
-            <div className="message-content">
+            <div className="message-body">
                 <div className="message-bubble">
                     {isUser ? (
-                        content
+                        <p className="message-text">{content}</p>
                     ) : (
                         <ReactMarkdown
                             components={{
-                                // Personalizar estilos de los elementos Markdown
                                 p: ({ children }) => <p className="md-paragraph">{children}</p>,
                                 strong: ({ children }) => <strong className="md-bold">{children}</strong>,
                                 em: ({ children }) => <em className="md-italic">{children}</em>,
@@ -106,26 +148,40 @@ const Message = ({ content, role, timestamp, isVoice = false, showAudioButton = 
                         </ReactMarkdown>
                     )}
 
-                    {/* Botón de reproducción para respuestas largas */}
+                    {/* Botón de reproducción de audio elegante */}
                     {showAudioButton && !isUser && (
                         <button
                             className={`audio-play-btn ${isPlaying ? 'playing' : ''} ${isLoadingAudio ? 'loading' : ''}`}
                             onClick={handlePlayAudio}
                             disabled={isLoadingAudio}
-                            title={isPlaying ? 'Detener audio' : 'Escuchar respuesta'}
+                            title={isPlaying ? 'Detener lectura' : 'Escuchar respuesta'}
+                            type="button"
                         >
                             {isLoadingAudio ? (
-                                <span className="audio-spinner">⏳</span>
+                                <>
+                                    <IconoSpinner />
+                                    <span>Cargando...</span>
+                                </>
                             ) : isPlaying ? (
-                                <span>⏹️ Detener</span>
+                                <>
+                                    <IconoStopAudio />
+                                    <span>Detener</span>
+                                </>
                             ) : (
-                                <span>🔊 Escuchar</span>
+                                <>
+                                    <IconoPlayAudio />
+                                    <span>Escuchar</span>
+                                </>
                             )}
                         </button>
                     )}
                 </div>
                 <span className="message-time">
-                    {isVoice && <span className="voice-indicator" title="Mensaje de voz">🎤</span>}
+                    {isVoice && (
+                        <span className="voice-indicator" title="Mensaje procesado por voz">
+                            <IconoMicrofonoNota />
+                        </span>
+                    )}
                     {formatTime(timestamp)}
                 </span>
             </div>
@@ -133,17 +189,19 @@ const Message = ({ content, role, timestamp, isVoice = false, showAudioButton = 
     );
 };
 
-// Componente para el indicador de escritura
+// Componente para el indicador de escritura de lujo
 export const TypingIndicator = () => {
     return (
-        <div className="message bot">
-            <div className="message-avatar">🏠</div>
-            <div className="message-content">
-                <div className="message-bubble">
-                    <div className="typing-indicator">
-                        <span className="typing-dot"></span>
-                        <span className="typing-dot"></span>
-                        <span className="typing-dot"></span>
+        <div className="message message-bot">
+            <div className="message-avatar" aria-hidden="true">
+                <IconoInmoBot />
+            </div>
+            <div className="message-body">
+                <div className="message-bubble typing-bubble">
+                    <div className="typing-indicator" aria-label="InmoBot está escribiendo">
+                        <span className="typing-dot" />
+                        <span className="typing-dot" />
+                        <span className="typing-dot" />
                     </div>
                 </div>
             </div>

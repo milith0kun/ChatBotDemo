@@ -415,7 +415,7 @@ const Dashboard = () => {
                     </div>
                     <div className="stat-content">
                         <span className="stat-value">{stats.hot}</span>
-                        <span className="stat-label">Calientes 🔥</span>
+                        <span className="stat-label">Leads Calientes</span>
                     </div>
                     {stats.total > 0 && (
                         <span className="stat-badge">

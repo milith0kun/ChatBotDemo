@@ -137,22 +137,28 @@
 
 /* New Chat Button */
 .new-chat-btn {
-    padding: var(--space-2) var(--space-3);
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: var(--radius-md);
-    color: white;
-    font-size: var(--text-xs);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 20px;
+    color: #ffffff;
+    font-size: 12px;
     font-weight: 500;
+    letter-spacing: 0.01em;
     cursor: pointer;
-    transition: all var(--duration-normal) var(--ease-out-expo);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     white-space: nowrap;
 }
 
 .new-chat-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.45);
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .chat-header-content {
@@ -745,112 +751,99 @@
     }
 }
 
-/* ==================== FLOATING CALL BUTTON ==================== */
+/* ==================== BOTÓN FLOTANTE LLAMADA CON VOZ IA ==================== */
 .floating-call-btn {
     position: fixed;
     bottom: 24px;
     right: 24px;
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, #10b981, #059669);
-    border: none;
-    border-radius: 50%;
-    color: white;
-    cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: 10px;
+    padding: 12px 22px;
+    background: linear-gradient(135deg, #093636 0%, #0d4f4f 100%);
+    border: 1px solid rgba(196, 163, 90, 0.45);
+    border-radius: 9999px;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
     box-shadow:
-        0 4px 20px rgba(16, 185, 129, 0.4),
-        0 0 40px rgba(16, 185, 129, 0.2);
-    transition: all 0.3s ease;
+        0 10px 25px rgba(13, 79, 79, 0.35),
+        0 0 15px rgba(196, 163, 90, 0.15);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 1000;
-    animation: pulseGlow 2s ease-in-out infinite;
 }
 
 .floating-call-btn:hover {
-    transform: scale(1.1);
+    transform: translateY(-2px) scale(1.02);
+    border-color: #c4a35a;
     box-shadow:
-        0 6px 30px rgba(16, 185, 129, 0.5),
-        0 0 60px rgba(16, 185, 129, 0.3);
+        0 14px 32px rgba(13, 79, 79, 0.45),
+        0 0 24px rgba(196, 163, 90, 0.3);
+    color: #ffffff;
 }
 
 .floating-call-btn:active {
-    transform: scale(0.95);
+    transform: translateY(0) scale(0.98);
 }
 
 .floating-call-btn svg {
-    width: 28px;
-    height: 28px;
+    width: 18px;
+    height: 18px;
+    color: #c4a35a;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
 }
 
-@keyframes pulseGlow {
+.floating-call-btn:hover svg {
+    transform: rotate(12deg) scale(1.1);
+}
 
-    0%,
-    100% {
-        box-shadow:
-            0 4px 20px rgba(16, 185, 129, 0.4),
-            0 0 40px rgba(16, 185, 129, 0.2);
-    }
-
-    50% {
-        box-shadow:
-            0 4px 25px rgba(16, 185, 129, 0.5),
-            0 0 50px rgba(16, 185, 129, 0.3);
-    }
+.floating-call-texto {
+    white-space: nowrap;
+    color: #ffffff;
 }
 
 /* Responsive para botón flotante */
 @media (max-width: 768px) {
     .floating-call-btn {
-        bottom: 90px;
+        bottom: 84px;
         right: 16px;
-        width: 56px;
-        height: 56px;
-        bottom: max(90px, calc(90px + env(safe-area-inset-bottom)));
-        right: max(16px, env(safe-area-inset-right));
+        padding: 9px 16px;
+        font-size: 0.8rem;
+        gap: 8px;
     }
 
     .floating-call-btn svg {
-        width: 26px;
-        height: 26px;
+        width: 16px;
+        height: 16px;
     }
 }
 
 @media (max-width: 480px) {
     .floating-call-btn {
         bottom: 80px;
-        right: 14px;
-        width: 52px;
-        height: 52px;
-    }
-
-    .floating-call-btn svg {
-        width: 24px;
-        height: 24px;
+        right: 12px;
+        padding: 8px 14px;
+        font-size: 0.78rem;
     }
 }
 
 /* Landscape */
 @media (max-height: 500px) and (orientation: landscape) {
     .floating-call-btn {
-        width: 48px;
-        height: 48px;
         bottom: 16px;
         right: 16px;
-    }
-
-    .floating-call-btn svg {
-        width: 22px;
-        height: 22px;
+        padding: 8px 14px;
     }
 }
 
 /* Optimizaciones táctiles */
 @media (hover: none) and (pointer: coarse) {
     .floating-call-btn {
-        min-width: 48px;
-        min-height: 48px;
+        min-height: 44px;
     }
 
     .quick-action-card {

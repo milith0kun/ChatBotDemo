@@ -166,11 +166,11 @@ Si el usuario quiere ver propiedades, catálogo, opciones, precios o algo simila
 5. **Si da sus datos**: Guárdalos y confirma
 
 ## ESTILO DE RESPUESTAS
-- Máximo 3-4 oraciones (excepto cuando muestres propiedades)
-- 1-2 emojis por mensaje máximo
-- Sé específico y útil
+- Máximo 3-4 oraciones (excepto cuando muestres catálogo o detalles de propiedades)
+- NO utilices emojis en tus mensajes. Mantén un estilo corporativo, sobrio y de alta gama inmobiliaria
+- Sé específico, directo y útil
 - Si no hay propiedades que coincidan, sugiere alternativas del catálogo
-- Usa español de España ("vale", "tenéis", etc.)
+- Usa español formal y cercano
 
 ## EJEMPLOS DE BUENAS RESPUESTAS
 
@@ -271,11 +271,11 @@ def format_property_card(prop: dict, index: int = None, compact: bool = False) -
         return f"{prefix}**{prop['title']}** - {price_str} | {prop['bedrooms']} hab, {prop['area']}m²"
     
     return f"""
-{prefix}🏠 **{prop['title']}** ({prop.get('zone', 'España')})
-💶 {price_str}
-📐 {prop['area']}m² | 🛏️ {prop['bedrooms']} hab | 🚿 {prop['bathrooms']} baños
-✨ {prop['description'][:80]}...
-🎯 {', '.join(prop['features'][:3])}
+{prefix}**{prop['title']}** ({prop.get('zone', 'España')})
+• Precio: {price_str}
+• Espacio: {prop['area']}m² | {prop['bedrooms']} hab | {prop['bathrooms']} baños
+• Detalle: {prop['description'][:90]}...
+• Características: {', '.join(prop['features'][:3])}
 """
 
 
@@ -290,23 +290,23 @@ def get_full_catalog() -> str:
     venta = [p for p in properties if p.get("objective") == "venta"]
     alquiler = [p for p in properties if p.get("objective") == "alquiler"]
     
-    result = "📋 **NUESTRAS PROPIEDADES EN ESPAÑA**\n"
-    result += "━" * 30 + "\n\n"
+    result = "**CATÁLOGO DE PROPIEDADES EN ESPAÑA**\n"
+    result += "—" * 32 + "\n\n"
     
     if venta:
-        result += "🏠 **EN VENTA:**\n"
+        result += "**PROPIEDADES EN VENTA:**\n"
         for i, prop in enumerate(venta, 1):
             result += format_property_card(prop, index=i)
         result += "\n"
     
     if alquiler:
-        result += "🔑 **EN ALQUILER:**\n"
+        result += "**PROPIEDADES EN ALQUILER:**\n"
         for i, prop in enumerate(alquiler, len(venta) + 1):
             result += format_property_card(prop, index=i)
     
-    result += "\n━" * 30 + "\n"
-    result += "💡 Precios desde 150.000€ hasta 890.000€ (venta) | Alquileres desde 1.200€/mes\n"
-    result += "¿Alguna te interesa? Puedo darte más detalles."
+    result += "\n" + ("—" * 32) + "\n"
+    result += "Precios desde 150.000€ hasta 890.000€ (venta) | Alquileres desde 1.200€/mes.\n"
+    result += "¿Deseas conocer más detalles de alguna propiedad o agendar una visita?"
     
     return result
 
@@ -414,7 +414,7 @@ async def process_message(
 2. NUNCA digas únicamente "Aquí tienes nuestras opciones" sin incluir la lista de propiedades en ese mismo mensaje.
 3. Formato nativo de WhatsApp:
    - Usa UN asterisco para negrita: *Chalet Mediterráneo* (NO uses sintaxis markdown de títulos como `###` ni doble asterisco `**`).
-   - Para subtítulos usa: *🏠 PROPIEDADES EN VENTA:* o *🔑 PROPIEDADES EN ALQUILER:*.
+   - Para subtítulos usa: *PROPIEDADES EN VENTA:* o *PROPIEDADES EN ALQUILER:*.
    - Muestra cada inmueble de forma atractiva y concisa con viñetas:
      • *Villa Paraíso* (Costa del Sol) - 200.000€ | 2 hab, 85m²
      • *Villa María* (Alicante) - 450.000€ | 3 hab, piscina propia

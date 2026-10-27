@@ -42,6 +42,21 @@ const IconoAlerta = () => (
     </svg>
 );
 
+const IconoEnlaceExterno = () => (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+        <polyline points="15 3 21 3 21 9" />
+        <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+);
+
+const IconoDispositivo = () => (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0d4f4f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+        <line x1="12" y1="18" x2="12.01" y2="18" />
+    </svg>
+);
+
 const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
     const [cargando, setCargando] = useState(true);
     const [reiniciando, setReiniciando] = useState(false);
@@ -331,7 +346,7 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
                                     disabled={configurandoWebhook}
                                     className="boton-secundario-whatsapp"
                                 >
-                                    {configurandoWebhook ? 'Configurando...' : '⚡ Sincronizar Webhook con Dokploy'}
+                                    {configurandoWebhook ? 'Configurando...' : 'Sincronizar Webhook con Dokploy'}
                                 </button>
                             </div>
                         </div>
@@ -361,7 +376,9 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
                                     </div>
                                 ) : (
                                     <div className="qr-marcador-posicion">
-                                        <div style={{ fontSize: '28px', marginBottom: '2px' }}>📲</div>
+                                        <div style={{ marginBottom: '6px' }}>
+                                            <IconoDispositivo />
+                                        </div>
                                         <p style={{ fontWeight: 700, color: '#0d4f4f', margin: '0 0 4px', fontSize: '13px' }}>
                                             Instancia no iniciada
                                         </p>
@@ -374,14 +391,16 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
                                             rel="noopener noreferrer"
                                             className="boton-abrir-manager-accion"
                                         >
-                                            👉 Abrir Evolution Manager
+                                            <IconoEnlaceExterno />
+                                            <span>Abrir Evolution Manager</span>
                                         </a>
                                         <button
                                             type="button"
                                             onClick={() => refrescarQr(true)}
                                             className="boton-recargar-qr-directo"
                                         >
-                                            🔄 Ya la creé, mostrar QR
+                                            <IconoRefrescar />
+                                            <span>Ya la creé, mostrar QR</span>
                                         </button>
                                     </div>
                                 )}

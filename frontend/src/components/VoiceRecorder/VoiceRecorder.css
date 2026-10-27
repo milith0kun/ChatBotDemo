@@ -8,24 +8,26 @@
 
 /* Botón principal de voz */
 .voice-button {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    border: none;
-    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
-    color: white;
+    border: 1px solid rgba(196, 163, 90, 0.3);
+    background: linear-gradient(135deg, #093636 0%, #0d4f4f 100%);
+    color: #c4a35a;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 14px rgba(13, 79, 79, 0.2);
     flex-shrink: 0;
 }
 
 .voice-button:hover:not(:disabled) {
-    transform: scale(1.05);
-    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+    transform: scale(1.06);
+    color: #ffffff;
+    border-color: #c4a35a;
+    box-shadow: 0 6px 18px rgba(13, 79, 79, 0.35);
 }
 
 .voice-button:active:not(:disabled) {
