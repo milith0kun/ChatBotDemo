@@ -2,26 +2,30 @@
 .modal-fondo-whatsapp {
     position: fixed;
     inset: 0;
-    background: rgba(10, 25, 25, 0.7);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(10, 25, 25, 0.75);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
-    padding: var(--space-4, 16px);
+    z-index: 99999;
+    padding: 16px;
+    overflow-y: auto;
     animation: aparicionFondo 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-tarjeta-whatsapp {
     background: #ffffff;
     width: 100%;
-    max-width: 500px;
-    border-radius: 20px;
-    box-shadow: 0 24px 56px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(13, 79, 79, 0.08);
+    max-width: 440px;
+    max-height: 94vh;
+    border-radius: 18px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(13, 79, 79, 0.12);
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    margin: auto;
+    position: relative;
     animation: zoomEntrada 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -30,22 +34,23 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 24px;
+    padding: 14px 18px;
     background: linear-gradient(135deg, #0d4f4f 0%, #156262 100%);
     color: #ffffff;
+    flex-shrink: 0;
 }
 
 .identificador-whatsapp {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
 }
 
 .icono-contenedor-whatsapp {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.15);
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.18);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -55,7 +60,7 @@
 
 .titulo-modal-whatsapp {
     margin: 0;
-    font-size: 19px;
+    font-size: 17px;
     font-weight: 700;
     letter-spacing: -0.01em;
     color: #ffffff;
@@ -207,19 +212,19 @@
 }
 
 .marco-qr-whatsapp {
-    padding: 16px;
+    padding: 10px;
     background: #ffffff;
-    border-radius: 18px;
-    border: 2px solid #e2e8f0;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border-radius: 14px;
+    border: 1.5px solid #e2e8f0;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .imagen-qr-contenedor {
-    width: 275px;
-    height: 275px;
+    width: 210px;
+    height: 210px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -239,15 +244,51 @@
 
 .qr-cargando-estado,
 .qr-marcador-posicion {
-    width: 275px;
-    height: 275px;
+    width: 210px;
+    height: 210px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 8px;
     color: #64748b;
-    font-size: 13px;
+    font-size: 12.5px;
+}
+
+.boton-abrir-manager-accion {
+    display: inline-block;
+    background: #0d4f4f;
+    color: #ffffff !important;
+    text-decoration: none;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(13, 79, 79, 0.2);
+    transition: all 0.2s ease;
+}
+
+.boton-abrir-manager-accion:hover {
+    background: #156262;
+    transform: translateY(-1px);
+}
+
+.boton-recargar-qr-directo {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: all 0.15s ease;
+}
+
+.boton-recargar-qr-directo:hover {
+    background: #e2e8f0;
+    color: #0f172a;
 }
 
 .indicador-vigencia-qr {

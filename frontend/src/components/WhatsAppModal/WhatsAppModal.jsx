@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
     obtenerEstadoWhatsApp,
     obtenerQrWhatsApp,
@@ -47,6 +48,7 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
     const [estadoConexion, setEstadoConexion] = useState('conectando');
     const [estaConectado, setEstaConectado] = useState(false);
     const [codigoQrBase64, setCodigoQrBase64] = useState('');
+    const [errorQr, setErrorQr] = useState(null);
     const [telefonoConectado, setTelefonoConectado] = useState('');
     const [nombrePerfil, setNombrePerfil] = useState('');
     const [instanciaNombre, setInstanciaNombre] = useState('Edmil Jampier Saire Bustamante');
@@ -56,7 +58,7 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
     const [enviandoPrueba, setEnviandoPrueba] = useState(false);
     const [resultadoPrueba, setResultadoPrueba] = useState(null);
     const [configurandoWebhook, setConfigurandoWebhook] = useState(false);
-    const [contadorRefresco, setContadorRefresco] = useState(18);
+    const [contadorRefresco, setContadorRefresco] = useState(35);
 
     const temporizadorRefrescoRef = useRef(null);
 
@@ -65,12 +67,16 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
         try {
             if (mostrarCargando) setCargando(true);
             const respuestaQr = await obtenerQrWhatsApp();
-            if (respuestaQr && respuestaQr.ok) {
-                setCodigoQrBase64(respuestaQr.codigo_qr_base64 || '');
-                setContadorRefresco(18);
+            if (respuestaQr && respuestaQr.ok && respuestaQr.codigo_qr_base64) {
+                setCodigoQrBase64(respuestaQr.codigo_qr_base64);
+                setErrorQr(null);
+                setContadorRefresco(35);
+            } else {
+                setErrorQr(respuestaQr?.error || 'Instancia no encontrada en Evolution API');
             }
         } catch (error) {
             console.error('Error al refrescar QR:', error);
+            setErrorQr('No se pudo conectar con el servidor de WhatsApp');
         } finally {
             if (mostrarCargando) setCargando(false);
         }
@@ -209,7 +215,7 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
 
     if (!estaAbierto) return null;
 
-    return (
+    return createPortal(
         <div className="modal-fondo-whatsapp">
             <div className="modal-tarjeta-whatsapp" onClick={(e) => e.stopPropagation()}>
                 {/* Cabecera del Modal */}
@@ -355,24 +361,28 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
                                     </div>
                                 ) : (
                                     <div className="qr-marcador-posicion">
-                                        <div className="animacion-giro-whatsapp" />
-                                        <p style={{ textAlign: 'center', maxWidth: '240px', lineHeight: 1.4 }}>
-                                            Esperando código QR de Evolution API...
+                                        <div style={{ fontSize: '28px', marginBottom: '2px' }}>📲</div>
+                                        <p style={{ fontWeight: 700, color: '#0d4f4f', margin: '0 0 4px', fontSize: '13px' }}>
+                                            Instancia no iniciada
+                                        </p>
+                                        <p style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', margin: '0 0 10px', lineHeight: 1.35, maxWidth: '190px' }}>
+                                            En Evolution Manager pulsa <strong>Create Instance</strong> con nombre: <br /><strong>{instanciaNombre}</strong>
                                         </p>
                                         <a
                                             href="https://cgbacademyti-evolutionapi-b4df35-72-60-114-137.sslip.io/manager/"
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            style={{
-                                                fontSize: '11.5px',
-                                                color: '#0d4f4f',
-                                                textDecoration: 'underline',
-                                                fontWeight: 600,
-                                                marginTop: '4px'
-                                            }}
+                                            className="boton-abrir-manager-accion"
                                         >
-                                            Abrir Manager de Evolution API
+                                            👉 Abrir Evolution Manager
                                         </a>
+                                        <button
+                                            type="button"
+                                            onClick={() => refrescarQr(true)}
+                                            className="boton-recargar-qr-directo"
+                                        >
+                                            🔄 Ya la creé, mostrar QR
+                                        </button>
                                     </div>
                                 )}
                             </div>
@@ -409,7 +419,8 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 
