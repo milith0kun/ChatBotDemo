@@ -191,7 +191,8 @@ export default function useWebRTC(options = {}) {
                     });
                     break;
 
-                // Respuesta parcial del asistente (streaming)
+                // Respuesta parcial del asistente (streaming - compatible con GA y preview)
+                case 'response.output_audio_transcript.delta':
                 case 'response.audio_transcript.delta':
                     setConversation(prev => {
                         const lastMsg = prev[prev.length - 1];
@@ -216,7 +217,8 @@ export default function useWebRTC(options = {}) {
                     });
                     break;
 
-                // Respuesta completa del asistente
+                // Respuesta completa del asistente (compatible con GA y preview)
+                case 'response.output_audio_transcript.done':
                 case 'response.audio_transcript.done':
                     setConversation(prev => {
                         if (prev.length === 0) return prev;
@@ -256,14 +258,11 @@ export default function useWebRTC(options = {}) {
      * Configurar canal de datos al abrirse
      */
     const configureDataChannel = useCallback((dataChannel) => {
-        // Enviar configuración de sesión
+        // Enviar configuración de sesión para Realtime GA
         const sessionUpdate = {
             type: 'session.update',
             session: {
-                modalities: ['text', 'audio'],
-                input_audio_transcription: {
-                    model: 'whisper-1'
-                }
+                type: 'realtime'
             }
         };
         dataChannel.send(JSON.stringify(sessionUpdate));
