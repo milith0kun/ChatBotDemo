@@ -1,23 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useWebRTC from '../../hooks/useWebRTC';
 import './VoiceCall.css';
 
-// Iconos SVG
-const PhoneIcon = () => (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+// ==================== ICONOS VECTORIALES DE ALTA GAMA ====================
+
+const IconoVolver = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7" />
+    </svg>
+);
+
+const IconoTelefono = () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
     </svg>
 );
 
-const PhoneOffIcon = () => (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconoColgar = () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91" />
         <line x1="23" y1="1" x2="1" y2="23" />
     </svg>
 );
 
-const MicOnIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconoMicrofono = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
         <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
         <line x1="12" y1="19" x2="12" y2="23" />
@@ -25,8 +33,8 @@ const MicOnIcon = () => (
     </svg>
 );
 
-const MicOffIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconoMicrofonoSilenciado = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <line x1="1" y1="1" x2="23" y2="23" />
         <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
         <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23" />
@@ -35,12 +43,27 @@ const MicOffIcon = () => (
     </svg>
 );
 
+const IconoOndaVoz = () => (
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2v20M17 5v14M7 5v14M22 10v4M2 10v4" />
+    </svg>
+);
+
+const IconoChispas = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+    </svg>
+);
+
+// ==================== COMPONENTE PRINCIPAL ====================
+
 const VoiceCall = ({ onCallEnd, onMessage }) => {
+    const navigate = useNavigate();
     const [callDuration, setCallDuration] = useState(0);
     const [error, setError] = useState(null);
     const timerRef = useRef(null);
 
-    // Hook de WebRTC
+    // Hook WebRTC
     const {
         status,
         connectionState,
@@ -55,16 +78,16 @@ const VoiceCall = ({ onCallEnd, onMessage }) => {
     } = useWebRTC({
         voice: 'shimmer',
         onMessage: (msg) => {
-            console.log('[VoiceCall] Mensaje:', msg);
+            console.log('[VoiceCall] Mensaje recibido:', msg);
             onMessage?.(msg);
         },
         onError: (err) => {
-            console.error('[VoiceCall] Error:', err);
+            console.error('[VoiceCall] Error de sesión:', err);
             setError(err);
         }
     });
 
-    // Temporizador de duración
+    // Temporizador de duración de llamada
     useEffect(() => {
         if (isSessionActive) {
             timerRef.current = setInterval(() => {
@@ -81,60 +104,66 @@ const VoiceCall = ({ onCallEnd, onMessage }) => {
         };
     }, [isSessionActive]);
 
-    // Formatear duración
+    // Formatear duración en mm:ss
     const formatDuration = (seconds) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    // Manejar inicio de llamada
+    // Iniciar llamada
     const handleStartCall = async () => {
         setError(null);
         setCallDuration(0);
         await startSession();
     };
 
-    // Manejar fin de llamada
+    // Finalizar llamada
     const handleEndCall = () => {
         stopSession();
         onCallEnd?.({ duration: callDuration });
     };
 
-    // Obtener último mensaje del bot
+    // Volver a la vista anterior o al inicio
+    const handleVolver = () => {
+        if (isSessionActive) {
+            stopSession();
+        }
+        navigate('/');
+    };
+
+    // Mensajes recientes
     const getLastBotMessage = () => {
         const assistantMessages = conversation.filter(m => m.role === 'assistant');
         return assistantMessages[assistantMessages.length - 1]?.text || '';
     };
 
-    // Obtener último mensaje del usuario
     const getLastUserMessage = () => {
         const userMessages = conversation.filter(m => m.role === 'user');
         return userMessages[userMessages.length - 1]?.text || '';
     };
 
-    // Determinar estado visual
+    // Estado visual legible
     const getStateInfo = () => {
         switch (connectionState) {
             case CONNECTION_STATES.IDLE:
-                return { text: 'Listo para llamar', color: '#666', state: 'idle' };
+                return { text: 'Disponible', color: '#94a3b8', state: 'idle' };
             case CONNECTION_STATES.CONNECTING:
-                return { text: status || 'Conectando...', color: '#f59e0b', state: 'connecting' };
+                return { text: status || 'Conectando con el asesor...', color: '#f59e0b', state: 'connecting' };
             case CONNECTION_STATES.CONNECTED:
-                // Determinar si está hablando el usuario o el bot
                 const lastMsg = conversation[conversation.length - 1];
                 if (lastMsg?.role === 'user' && !lastMsg.isFinal) {
-                    return { text: 'Escuchando...', color: '#10b981', state: 'listening' };
+                    return { text: 'Escuchando tu voz...', color: '#10b981', state: 'listening' };
                 } else if (lastMsg?.role === 'assistant' && !lastMsg.isFinal) {
-                    return { text: 'InmoBot hablando...', color: '#8b5cf6', state: 'speaking' };
+                    return { text: 'InmoBot respondiendo...', color: '#c4a35a', state: 'speaking' };
                 } else if (currentVolume > 0.1) {
-                    return { text: 'InmoBot hablando...', color: '#8b5cf6', state: 'speaking' };
+                    return { text: 'InmoBot hablando...', color: '#c4a35a', state: 'speaking' };
                 }
-                return { text: 'Escuchando...', color: '#10b981', state: 'listening' };
+                return { text: 'En línea • Escuchando...', color: '#10b981', state: 'listening' };
             case CONNECTION_STATES.ERROR:
                 return { text: 'Error de conexión', color: '#ef4444', state: 'error' };
             default:
-                return { text: '', color: '#666', state: 'idle' };
+                return { text: '', color: '#94a3b8', state: 'idle' };
         }
     };
 
@@ -143,142 +172,197 @@ const VoiceCall = ({ onCallEnd, onMessage }) => {
 
     return (
         <div className={containerClass}>
-            {/* Header */}
+            {/* Iluminación de fondo cinemática */}
+            <div className="fondo-aura-ambiente" aria-hidden="true" />
+
+            {/* Cabecera Flotante de Cristal */}
             <header className="voice-call-header">
                 <div className="header-left">
-                    <button className="back-button" onClick={() => window.history.back()}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
+                    <button className="back-button" onClick={handleVolver} title="Volver al chat">
+                        <IconoVolver />
+                        <span className="back-button-texto">Volver</span>
                     </button>
-                    <div className="header-title">
-                        <h1>InmoBot AI</h1>
-                        {isSessionActive && (
-                            <span className="call-duration">{formatDuration(callDuration)}</span>
-                        )}
+                    <div className="header-brand">
+                        <span className="brand-title">InmoBot AI</span>
+                        <span className="brand-dot-separator">•</span>
+                        <span className="brand-mode">Asesoría de Voz</span>
                     </div>
                 </div>
-                {/* Badge de WebRTC */}
-                {isSessionActive && (
-                    <div className="webrtc-badge">
-                        <span className="badge-dot"></span>
-                        WebRTC
-                    </div>
-                )}
+
+                <div className="header-right">
+                    {isSessionActive ? (
+                        <div className="indicador-llamada-activa">
+                            <span className="punto-grabacion-activo" />
+                            <span className="call-duration">{formatDuration(callDuration)}</span>
+                        </div>
+                    ) : (
+                        <div className="insignia-disponible">
+                            <span className="punto-verde-disponible" />
+                            <span>Línea Directa</span>
+                        </div>
+                    )}
+                </div>
             </header>
 
-            {/* Main Content */}
+            {/* Contenido Principal */}
             <main className="voice-call-main">
                 {!isSessionActive ? (
-                    /* Estado Idle */
+                    /* Vista de Reposo - Lista para Presentación Ejecutiva */
                     <div className="idle-content">
+                        {/* Orbe Central Escultórico */}
                         <div className="avatar-section">
                             <div className="avatar-container">
+                                <div className="orbe-halo-exterior" aria-hidden="true" />
+                                <div className="orbe-borde-doble" aria-hidden="true" />
                                 <div className="avatar-orb">
-                                    <svg viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-                                    </svg>
+                                    <IconoOndaVoz />
                                 </div>
                             </div>
                         </div>
-                        <h2 className="idle-title">Asesor Inmobiliario por Voz</h2>
-                        <p className="idle-subtitle">
-                            Habla con InmoBot en tiempo real usando OpenAI Realtime API.
-                            Consulta propiedades exclusivas, precios y agenda visitas con conversación natural instantánea.
-                        </p>
-                        <div className="tech-badge">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
-                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                            </svg>
-                            <span>Tecnología WebRTC + GPT-4o Realtime</span>
+
+                        {/* Textos de Alta Gama para Presentación */}
+                        <div className="bloque-presentacion-textos">
+                            <div className="etiqueta-presentacion">
+                                <IconoChispas />
+                                <span>Asesoría Inmobiliaria en Tiempo Real</span>
+                            </div>
+
+                            <h1 className="idle-title">Asesor Inmobiliario por Voz</h1>
+
+                            <p className="idle-subtitle">
+                                Conversación fluida con inteligencia contextual para consultar propiedades exclusivas en España, evaluar oportunidades de inversión y agendar visitas privadas al instante.
+                            </p>
+
+                            {/* Sugerencias de Preguntas para Demostración */}
+                            <div className="sugerencias-presentacion">
+                                <span className="sugerencia-chip">"¿Qué villas con piscina tenéis disponibles?"</span>
+                                <span className="sugerencia-chip">"Busco un ático en Madrid o Barcelona"</span>
+                                <span className="sugerencia-chip">"Quiero invertir en la Costa del Sol"</span>
+                            </div>
+                        </div>
+
+                        {/* Botón Principal de Inicio de Llamada */}
+                        <div className="contenedor-accion-llamada">
+                            <button
+                                className="boton-iniciar-llamada"
+                                onClick={handleStartCall}
+                                type="button"
+                                aria-label="Iniciar llamada de voz con InmoBot"
+                            >
+                                <div className="icono-llamada-wrapper">
+                                    <IconoTelefono />
+                                </div>
+                                <span className="texto-boton-llamada">Iniciar Conversación</span>
+                            </button>
+                            <p className="pie-accion-llamada">
+                                Pulsa para hablar directamente con el asesor inmobiliario
+                            </p>
                         </div>
                     </div>
                 ) : (
-                    /* Estado de llamada activa */
-                    <>
+                    /* Vista de Llamada Activa */
+                    <div className="llamada-activa-content">
                         <div className="avatar-section">
-                            <div className="avatar-container">
-                                {/* Anillos de animación basados en volumen */}
-                                <div className="avatar-rings" style={{
-                                    transform: `scale(${1 + currentVolume * 0.5})`,
-                                    opacity: 0.3 + currentVolume * 0.7
-                                }}>
-                                    <div className="avatar-ring"></div>
-                                    <div className="avatar-ring"></div>
-                                    <div className="avatar-ring"></div>
+                            <div className="avatar-container activa">
+                                <div
+                                    className="avatar-rings"
+                                    style={{
+                                        transform: `scale(${1 + currentVolume * 0.4})`,
+                                        opacity: 0.35 + currentVolume * 0.65
+                                    }}
+                                    aria-hidden="true"
+                                >
+                                    <div className="avatar-ring" />
+                                    <div className="avatar-ring" />
+                                    <div className="avatar-ring" />
                                 </div>
-                                <div className="avatar-orb" style={{
-                                    boxShadow: currentVolume > 0.1
-                                        ? `0 0 ${20 + currentVolume * 40}px rgba(139, 92, 246, ${0.3 + currentVolume * 0.5})`
-                                        : undefined
-                                }}>
-                                    <svg viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-                                    </svg>
+
+                                <div
+                                    className="avatar-orb activa"
+                                    style={{
+                                        boxShadow: currentVolume > 0.08
+                                            ? `0 0 ${25 + currentVolume * 45}px rgba(196, 163, 90, 0.45), 0 0 ${45 + currentVolume * 65}px rgba(13, 79, 79, 0.6)`
+                                            : undefined
+                                    }}
+                                >
+                                    <div className="ecualizador-onda-activo" aria-hidden="true">
+                                        <span className="barra-onda" style={{ height: `${25 + currentVolume * 70}%` }} />
+                                        <span className="barra-onda" style={{ height: `${40 + currentVolume * 100}%` }} />
+                                        <span className="barra-onda" style={{ height: `${30 + currentVolume * 85}%` }} />
+                                        <span className="barra-onda" style={{ height: `${50 + currentVolume * 110}%` }} />
+                                        <span className="barra-onda" style={{ height: `${25 + currentVolume * 65}%` }} />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
+                        {/* Estado y Transcripción en Tarjetas de Cristal */}
                         <div className="status-section">
-                            <span className="status-label" style={{ color: stateInfo.color }}>
-                                {stateInfo.text}
-                            </span>
-                            <p className="status-message">
-                                {getLastBotMessage() || 'Esperando respuesta...'}
-                            </p>
+                            <div className="insignia-estado-enlace">
+                                <span className="punto-pulso-estado" style={{ backgroundColor: stateInfo.color }} />
+                                <span className="status-label" style={{ color: stateInfo.color }}>
+                                    {stateInfo.text}
+                                </span>
+                            </div>
+
+                            {getLastBotMessage() && (
+                                <p className="status-message">
+                                    "{getLastBotMessage()}"
+                                </p>
+                            )}
                         </div>
 
-                        {/* Transcripción del usuario */}
                         {getLastUserMessage() && (
                             <div className="transcript-section">
                                 <div className="transcript-bubble">
-                                    <span className="transcript-label">Tú dijiste</span>
+                                    <span className="transcript-label">Tu consulta</span>
                                     <p className="transcript-text user">{getLastUserMessage()}</p>
                                 </div>
                             </div>
                         )}
 
-                        {/* Indicador de volumen */}
-                        <div className="volume-indicator">
-                            <div
-                                className="volume-bar"
-                                style={{ width: `${Math.min(currentVolume * 200, 100)}%` }}
-                            />
-                        </div>
-
                         {error && (
                             <div className="error-message">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
-                                </svg>
-                                {error}
+                                <span>{error}</span>
                             </div>
                         )}
-                    </>
+                    </div>
                 )}
             </main>
 
-            {/* Controls */}
-            <footer className="voice-call-controls">
-                {!isSessionActive ? (
-                    <button className="control-button start-call" onClick={handleStartCall}>
-                        <PhoneIcon />
-                    </button>
-                ) : (
-                    <>
+            {/* Controles Flotantes al Pie (Sin división brusca) */}
+            {isSessionActive && (
+                <footer className="voice-call-controls-activa">
+                    <div className="isla-controles-flotante">
                         <button
                             className={`control-button mute ${isMuted ? 'active' : ''}`}
                             onClick={toggleMute}
+                            title={isMuted ? 'Activar micrófono' : 'Silenciar micrófono'}
+                            type="button"
                         >
-                            {isMuted ? <MicOffIcon /> : <MicOnIcon />}
+                            {isMuted ? <IconoMicrofonoSilenciado /> : <IconoMicrofono />}
+                            <span className="control-texto-boton">{isMuted ? 'Silenciado' : 'Silenciar'}</span>
                         </button>
 
-                        <button className="control-button end-call" onClick={handleEndCall}>
-                            <PhoneOffIcon />
+                        <div className="vumetro-volumen-contenedor" title="Sensibilidad de voz">
+                            <div
+                                className="vumetro-volumen-barra"
+                                style={{ width: `${Math.min(currentVolume * 220, 100)}%` }}
+                            />
+                        </div>
+
+                        <button
+                            className="control-button end-call"
+                            onClick={handleEndCall}
+                            title="Finalizar llamada"
+                            type="button"
+                        >
+                            <IconoColgar />
+                            <span className="control-texto-boton">Finalizar</span>
                         </button>
-                    </>
-                )}
-            </footer>
+                    </div>
+                </footer>
+            )}
         </div>
     );
 };
