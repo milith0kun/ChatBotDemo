@@ -132,6 +132,58 @@ async def obtener_qr_whatsapp() -> dict:
         }
 
 
+async def reiniciar_instancia_whatsapp() -> dict:
+    """
+    Fuerza el reinicio de la sesión de WhatsApp en Evolution API.
+    Limpia sesiones colgadas o códigos QR caducados y solicita un nuevo QR fresco.
+    """
+    instancia_codificada = _obtener_url_instancia_codificada()
+    url_logout = f"{EVOLUTION_API_URL}/instance/logout/{instancia_codificada}"
+    url_restart = f"{EVOLUTION_API_URL}/instance/restart/{instancia_codificada}"
+
+    try:
+        async with httpx.AsyncClient(timeout=20.0) as cliente:
+            # 1. Intentar logout para limpiar sockets residuales
+            try:
+                await cliente.delete(url_logout, headers=CABECERAS_EVOLUTION)
+            except Exception:
+                pass
+
+            # 2. Reiniciar la instancia
+            respuesta_restart = await cliente.post(url_restart, headers=CABECERAS_EVOLUTION)
+            base64_qr = ""
+
+            if respuesta_restart.status_code in (200, 201):
+                try:
+                    datos = respuesta_restart.json()
+                    base64_qr = datos.get("base64") or ""
+                except Exception:
+                    pass
+
+            # 3. Si no vino en el restart, solicitar con connect
+            if not base64_qr:
+                return await obtener_qr_whatsapp()
+
+            if base64_qr and not base64_qr.startswith("data:"):
+                base64_qr = f"data:image/png;base64,{base64_qr}"
+
+            return {
+                "ok": True,
+                "instancia": EVOLUTION_INSTANCE_NAME,
+                "codigo_qr_base64": base64_qr,
+                "codigo_emparejamiento": None,
+                "estado": "esperando_escaneo"
+            }
+
+    except Exception as error:
+        print(f"[WHATSAPP] Error al reiniciar instancia: {error}")
+        return {
+            "ok": False,
+            "instancia": EVOLUTION_INSTANCE_NAME,
+            "error": str(error)
+        }
+
+
 async def enviar_mensaje_whatsapp(numero: str, texto: str) -> dict:
     """
     Envía un mensaje de texto por WhatsApp a través de Evolution API.

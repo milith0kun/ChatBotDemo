@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     obtenerEstadoWhatsApp,
     obtenerQrWhatsApp,
+    reiniciarWhatsApp,
     configurarWebhookWhatsApp,
     enviarMensajeWhatsAppPrueba
 } from '../../services/api';
@@ -21,7 +22,7 @@ const IconoCerrar = () => (
 );
 
 const IconoRefrescar = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
     </svg>
 );
@@ -32,12 +33,20 @@ const IconoCheck = () => (
     </svg>
 );
 
+const IconoAlerta = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+);
+
 const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
     const [cargando, setCargando] = useState(true);
+    const [reiniciando, setReiniciando] = useState(false);
     const [estadoConexion, setEstadoConexion] = useState('conectando');
     const [estaConectado, setEstaConectado] = useState(false);
     const [codigoQrBase64, setCodigoQrBase64] = useState('');
-    const [codigoEmparejamiento, setCodigoEmparejamiento] = useState('');
     const [telefonoConectado, setTelefonoConectado] = useState('');
     const [nombrePerfil, setNombrePerfil] = useState('');
     const [instanciaNombre, setInstanciaNombre] = useState('Edmil Jampier Saire Bustamante');
@@ -47,14 +56,32 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
     const [enviandoPrueba, setEnviandoPrueba] = useState(false);
     const [resultadoPrueba, setResultadoPrueba] = useState(null);
     const [configurandoWebhook, setConfigurandoWebhook] = useState(false);
+    const [contadorRefresco, setContadorRefresco] = useState(18);
 
-    // Cargar datos al abrir modal
+    const temporizadorRefrescoRef = useRef(null);
+
+    // Cargar QR fresco
+    const refrescarQr = async (mostrarCargando = false) => {
+        try {
+            if (mostrarCargando) setCargando(true);
+            const respuestaQr = await obtenerQrWhatsApp();
+            if (respuestaQr && respuestaQr.ok) {
+                setCodigoQrBase64(respuestaQr.codigo_qr_base64 || '');
+                setContadorRefresco(18);
+            }
+        } catch (error) {
+            console.error('Error al refrescar QR:', error);
+        } finally {
+            if (mostrarCargando) setCargando(false);
+        }
+    };
+
+    // Cargar estado inicial
     const cargarInformacionWhatsApp = async () => {
         try {
             setCargando(true);
-            setMensajeEstado('Consultando estado en Evolution API...');
+            setMensajeEstado('Conectando con Evolution API...');
             
-            // 1. Consultar estado
             const respuestaEstado = await obtenerEstadoWhatsApp();
             if (respuestaEstado && respuestaEstado.ok) {
                 setEstadoConexion(respuestaEstado.estado || 'desconocido');
@@ -65,30 +92,51 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
                     setInstanciaNombre(respuestaEstado.instancia);
                 }
 
-                // 2. Si no está conectado, solicitar QR
                 if (!respuestaEstado.esta_conectado) {
-                    setMensajeEstado('Generando código QR de vinculación...');
-                    const respuestaQr = await obtenerQrWhatsApp();
-                    if (respuestaQr && respuestaQr.ok) {
-                        setCodigoQrBase64(respuestaQr.codigo_qr_base64 || '');
-                        setCodigoEmparejamiento(respuestaQr.codigo_emparejamiento || '');
-                    }
+                    setMensajeEstado('Generando código QR nítido...');
+                    await refrescarQr(false);
                 }
             }
         } catch (error) {
             console.error('Error al cargar datos de WhatsApp:', error);
-            setMensajeEstado('No se pudo conectar con la API de WhatsApp.');
+            setMensajeEstado('No se pudo comunicar con la API de WhatsApp.');
         } finally {
             setCargando(false);
         }
     };
 
+    // Reiniciar sesión en Evolution API para limpiar sockets colgados
+    const manejarReinicioSesion = async () => {
+        try {
+            setReiniciando(true);
+            setMensajeEstado('Restableciendo sesión en Evolution API...');
+            const respuesta = await reiniciarWhatsApp();
+            if (respuesta && respuesta.ok) {
+                if (respuesta.codigo_qr_base64) {
+                    setCodigoQrBase64(respuesta.codigo_qr_base64);
+                } else {
+                    await refrescarQr(false);
+                }
+                setEstaConectado(false);
+                setEstadoConexion('connecting');
+                setContadorRefresco(18);
+            } else {
+                alert('No se pudo reiniciar la sesión. Intenta de nuevo.');
+            }
+        } catch (error) {
+            alert('Error al reiniciar sesión de WhatsApp.');
+        } finally {
+            setReiniciando(false);
+        }
+    };
+
+    // Efecto principal: carga inicial y sondeo periódico
     useEffect(() => {
         if (!estaAbierto) return;
         cargarInformacionWhatsApp();
 
-        // Sondeo cada 6 segundos si está abierto y no está conectado
-        const intervalo = setInterval(() => {
+        // Sondeo de estado cada 5 segundos para detectar el escaneo en vivo
+        const intervaloEstado = setInterval(() => {
             if (!estaConectado) {
                 obtenerEstadoWhatsApp().then(datos => {
                     if (datos && datos.ok && datos.esta_conectado) {
@@ -99,9 +147,25 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
                     }
                 }).catch(() => {});
             }
-        }, 6000);
+        }, 5000);
 
-        return () => clearInterval(intervalo);
+        // Auto-refresco del QR cada 18 segundos para que nunca caduque
+        const intervaloQr = setInterval(() => {
+            if (!estaConectado) {
+                refrescarQr(false);
+            }
+        }, 18000);
+
+        // Contador regresivo visual
+        const intervaloCuenta = setInterval(() => {
+            setContadorRefresco(prev => (prev > 1 ? prev - 1 : 18));
+        }, 1000);
+
+        return () => {
+            clearInterval(intervaloEstado);
+            clearInterval(intervaloQr);
+            clearInterval(intervaloCuenta);
+        };
     }, [estaAbierto, estaConectado]);
 
     // Enviar mensaje de prueba
@@ -170,11 +234,11 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
                     <div className="barra-estado-whatsapp">
                         <div className="indicador-info-instancia">
                             <span className="etiqueta-instancia">Instancia:</span>
-                            <span className="valor-instancia">{instanciaNombre}</span>
+                            <span className="valor-instancia" title={instanciaNombre}>{instanciaNombre}</span>
                         </div>
                         <div className={`insignia-estado-whatsapp ${estaConectado ? 'estado-conectado' : 'estado-esperando'}`}>
                             <span className="punto-pulso-whatsapp" />
-                            <span>{estaConectado ? 'WhatsApp Conectado' : 'Esperando Vinculación'}</span>
+                            <span>{estaConectado ? 'WhatsApp Conectado' : 'Esperando Escaneo'}</span>
                         </div>
                     </div>
 
@@ -190,9 +254,9 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
                                 <div className="icono-check-circulo">
                                     <IconoCheck />
                                 </div>
-                                <h4 className="titulo-exito-whatsapp">¡Instancia Conectada y Activa!</h4>
+                                <h4 className="titulo-exito-whatsapp">¡WhatsApp Conectado y Activo!</h4>
                                 <p className="descripcion-exito-whatsapp">
-                                    InmoBot está recibiendo y respondiendo consultas inmobiliarias en vivo desde WhatsApp.
+                                    InmoBot está recibiendo y respondiendo consultas de clientes en tiempo real.
                                 </p>
 
                                 <div className="detalles-perfil-conectado">
@@ -209,8 +273,8 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
                                         </div>
                                     )}
                                     <div className="item-detalle-whatsapp">
-                                        <span className="etiqueta-detalle">Canal Omnicanal:</span>
-                                        <span className="valor-badge-omnicanal">Activo 24/7</span>
+                                        <span className="etiqueta-detalle">Estado de Respuesta:</span>
+                                        <span className="valor-badge-omnicanal">En línea 24/7</span>
                                     </div>
                                 </div>
                             </div>
@@ -266,29 +330,34 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
                             </div>
                         </div>
                     ) : (
-                        /* Estado No Conectado - Mostrar QR */
+                        /* Estado No Conectado - Mostrar QR Limpio y Nítido */
                         <div className="seccion-qr-whatsapp">
                             <div className="instrucciones-vinculacion-whatsapp">
                                 <p className="paso-instruccion-whatsapp">
-                                    <strong>1.</strong> Abre WhatsApp en tu teléfono móvil.
+                                    <strong>1.</strong> Abre <strong>WhatsApp</strong> en tu teléfono móvil.
                                 </p>
                                 <p className="paso-instruccion-whatsapp">
-                                    <strong>2.</strong> Toca <strong>Menú</strong> o <strong>Ajustes</strong> y selecciona <strong>Dispositivos vinculados</strong>.
+                                    <strong>2.</strong> Toca <strong>Menú (⋮)</strong> o <strong>Ajustes</strong> ➔ <strong>Dispositivos vinculados</strong>.
                                 </p>
                                 <p className="paso-instruccion-whatsapp">
-                                    <strong>3.</strong> Toca <strong>Vincular un dispositivo</strong> y apunta la cámara a este código:
+                                    <strong>3.</strong> Toca <strong>Vincular un dispositivo</strong> y apunta tu cámara al código:
                                 </p>
                             </div>
 
+                            {/* Marco con Código QR Nítido y Limpio (sin animaciones invasivas) */}
                             <div className="marco-qr-whatsapp">
-                                {codigoQrBase64 ? (
+                                {reiniciando ? (
+                                    <div className="qr-cargando-estado">
+                                        <div className="animacion-giro-whatsapp" />
+                                        <p>Restableciendo sesión limpia...</p>
+                                    </div>
+                                ) : codigoQrBase64 ? (
                                     <div className="imagen-qr-contenedor">
                                         <img
                                             src={codigoQrBase64}
                                             alt="Código QR WhatsApp Evolution API"
                                             className="imagen-qr-whatsapp"
                                         />
-                                        <div className="linea-escaneo-qr" />
                                     </div>
                                 ) : (
                                     <div className="qr-marcador-posicion">
@@ -297,21 +366,32 @@ const WhatsAppModal = ({ estaAbierto, alCerrar }) => {
                                 )}
                             </div>
 
-                            {codigoEmparejamiento && (
-                                <div className="codigo-emparejamiento-bloque">
-                                    <span className="etiqueta-emparejamiento">Código de vinculación numérica:</span>
-                                    <span className="valor-emparejamiento">{codigoEmparejamiento}</span>
-                                </div>
-                            )}
+                            {/* Indicador de vigencia del QR */}
+                            <div className="indicador-vigencia-qr">
+                                <span className="punto-verde-vigencia" />
+                                <span>Código QR activo y sincronizado en vivo (auto-refresco en {contadorRefresco}s)</span>
+                            </div>
 
                             <div className="acciones-pie-modal-whatsapp">
                                 <button
                                     type="button"
-                                    onClick={cargarInformacionWhatsApp}
+                                    onClick={() => refrescarQr(true)}
                                     className="boton-refrescar-qr-whatsapp"
+                                    title="Actualizar el código QR manualmente"
                                 >
                                     <IconoRefrescar />
                                     <span>Actualizar QR</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={manejarReinicioSesion}
+                                    disabled={reiniciando}
+                                    className="boton-reiniciar-sesion-whatsapp"
+                                    title="Si no vincula, reinicia la sesión para un código nuevo desde cero"
+                                >
+                                    <IconoAlerta />
+                                    <span>{reiniciando ? 'Reiniciando...' : 'Reiniciar Sesión QR'}</span>
                                 </button>
                             </div>
                         </div>

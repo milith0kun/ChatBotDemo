@@ -17,6 +17,7 @@ from modules.voice_handler import transcribe_audio, synthesize_speech, adapt_tex
 from modules.whatsapp_bot import (
     obtener_estado_whatsapp,
     obtener_qr_whatsapp,
+    reiniciar_instancia_whatsapp,
     enviar_mensaje_whatsapp,
     configurar_webhook_whatsapp,
     obtener_info_webhook_whatsapp,
@@ -401,6 +402,12 @@ async def whatsapp_estado():
 async def whatsapp_qr():
     """Obtiene el código QR en base64 y código de emparejamiento."""
     return await obtener_qr_whatsapp()
+
+
+@app.post("/api/whatsapp/reiniciar")
+async def whatsapp_reiniciar():
+    """Fuerza un reinicio de la sesión de WhatsApp para generar un QR nuevo y fresco."""
+    return await reiniciar_instancia_whatsapp()
 
 
 @app.post("/api/whatsapp/configurar-webhook")

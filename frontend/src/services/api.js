@@ -100,6 +100,20 @@ export const obtenerQrWhatsApp = async () => {
 };
 
 /**
+ * Reinicia la sesión de WhatsApp en Evolution API y obtiene un QR fresco
+ * @returns {Promise<{ok: boolean, codigo_qr_base64?: string}>}
+ */
+export const reiniciarWhatsApp = async () => {
+    try {
+        const response = await api.post('/api/whatsapp/reiniciar');
+        return response.data;
+    } catch (error) {
+        console.error('Error restarting WhatsApp session:', error);
+        throw error;
+    }
+};
+
+/**
  * Configura la URL del webhook en Evolution API
  * @param {string} urlWebhook
  */
