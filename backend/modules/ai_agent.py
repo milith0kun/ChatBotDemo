@@ -397,12 +397,38 @@ async def process_message(
         "content": message
     })
 
-    # OPTIMIZACIÓN PARA VOZ: Usar configuración MÁS rápida y concisa
+    # OPTIMIZACIÓN SEGÚN CANAL (VOZ, WHATSAPP, WEB)
     is_voice = channel == "voice"
-    system_prompt = VOICE_SYSTEM_PROMPT if is_voice else SYSTEM_PROMPT
-    max_tokens_first = 100 if is_voice else 800  # Reducido a 100 para respuestas ultra-cortas
-    max_tokens_second = 60 if is_voice else 600  # Reducido a 60
-    temperature = 0.4 if is_voice else 0.8  # Más predecible y rápido (0.5 → 0.4)
+    is_whatsapp = channel == "whatsapp"
+
+    if is_voice:
+        system_prompt = VOICE_SYSTEM_PROMPT
+        max_tokens_first = 100
+        max_tokens_second = 60
+        temperature = 0.4
+    elif is_whatsapp:
+        system_prompt = SYSTEM_PROMPT + """
+
+## 📱 REGLAS DE ORO OBLIGATORIAS PARA WHATSAPP:
+1. En WhatsApp NO existen tarjetas gráficas ni pantallas interactivas. Por lo tanto, SIEMPRE que presentes opciones, catálogo o propiedades recomendadas, DEBES listar las propiedades en el texto de este mismo mensaje.
+2. NUNCA digas únicamente "Aquí tienes nuestras opciones" sin incluir la lista de propiedades en ese mismo mensaje.
+3. Formato nativo de WhatsApp:
+   - Usa UN asterisco para negrita: *Chalet Mediterráneo* (NO uses sintaxis markdown de títulos como `###` ni doble asterisco `**`).
+   - Para subtítulos usa: *🏠 PROPIEDADES EN VENTA:* o *🔑 PROPIEDADES EN ALQUILER:*.
+   - Muestra cada inmueble de forma atractiva y concisa con viñetas:
+     • *Villa Paraíso* (Costa del Sol) - 200.000€ | 2 hab, 85m²
+     • *Villa María* (Alicante) - 450.000€ | 3 hab, piscina propia
+     • *Chalet Mediterráneo* (Marbella) - 890.000€ | 4 hab, vistas al mar
+4. Cierra siempre con una pregunta cordial invitando al cliente a saber más o agendar una visita.
+"""
+        max_tokens_first = 800
+        max_tokens_second = 700
+        temperature = 0.7
+    else:
+        system_prompt = SYSTEM_PROMPT
+        max_tokens_first = 800
+        max_tokens_second = 600
+        temperature = 0.8
 
     messages = [{"role": "system", "content": system_prompt}] + conversation_history
 

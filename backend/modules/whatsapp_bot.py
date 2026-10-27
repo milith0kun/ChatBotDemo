@@ -184,6 +184,18 @@ async def reiniciar_instancia_whatsapp() -> dict:
         }
 
 
+def limpiar_formato_whatsapp(texto: str) -> str:
+    """Convierte encabezados markdown ### y negritas dobles ** a sintaxis nativa de WhatsApp."""
+    import re
+    if not texto:
+        return ""
+    # Convertir títulos ### Titulo a *Titulo*
+    texto = re.sub(r'#{1,4}\s*(.+)', r'*\1*', texto)
+    # Convertir **negrita** a *negrita*
+    texto = re.sub(r'\*\*(.+?)\*\*', r'*\1*', texto)
+    return texto.strip()
+
+
 async def enviar_mensaje_whatsapp(numero: str, texto: str) -> dict:
     """
     Envía un mensaje de texto por WhatsApp a través de Evolution API.
@@ -192,12 +204,13 @@ async def enviar_mensaje_whatsapp(numero: str, texto: str) -> dict:
     instancia_codificada = _obtener_url_instancia_codificada()
     url_envio = f"{EVOLUTION_API_URL}/message/sendText/{instancia_codificada}"
 
-    # Limpiar formato de número
+    # Limpiar formato de número y texto nativo
     numero_limpio = numero.replace("@s.whatsapp.net", "").replace("+", "").replace(" ", "").replace("-", "")
+    texto_limpio = limpiar_formato_whatsapp(texto)
 
     cuerpo = {
         "number": numero_limpio,
-        "text": texto,
+        "text": texto_limpio,
         "delay": 1000,
         "linkPreview": True
     }
