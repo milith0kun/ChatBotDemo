@@ -168,6 +168,55 @@
     opacity: 1;
 }
 
+/* ==================== BOTÓN WHATSAPP ==================== */
+.boton-header-whatsapp {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2, 8px);
+    padding: var(--space-2, 8px) var(--space-3, 12px);
+    font-size: var(--text-xs, 12px);
+    font-weight: 600;
+    color: #128c7e;
+    text-decoration: none;
+    background: rgba(37, 211, 102, 0.12);
+    border: 1px solid rgba(37, 211, 102, 0.3);
+    border-radius: var(--radius-full, 9999px);
+    cursor: pointer;
+    transition: all var(--duration-normal, 0.2s) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.boton-header-whatsapp:hover {
+    background: #25d366;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35);
+}
+
+.punto-estado-whatsapp {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #eab308;
+    box-shadow: 0 0 6px #eab308;
+}
+
+.boton-header-whatsapp.conectado .punto-estado-whatsapp {
+    background: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
+    animation: pulsoVerde 2s infinite;
+}
+
+@keyframes pulsoVerde {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.85);
+    }
+}
+
 /* ==================== CALL LINK ==================== */
 .call-link {
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));

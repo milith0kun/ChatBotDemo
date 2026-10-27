@@ -77,7 +77,7 @@ const ChatInterface = () => {
     const [isLoading, setIsLoading] = useState(false);
     // Cargar sessionId desde localStorage si existe
     const [sessionId, setSessionId] = useState(() => {
-        return localStorage.getItem('ecosbot_session_id') || null;
+        return localStorage.getItem('inmobot_session_id') || localStorage.getItem('ecosbot_session_id') || null;
     });
     const [error, setError] = useState(null);
     const [isVoiceProcessing, setIsVoiceProcessing] = useState(false);
@@ -88,7 +88,7 @@ const ChatInterface = () => {
     // Guardar sessionId en localStorage cuando cambie
     useEffect(() => {
         if (sessionId) {
-            localStorage.setItem('ecosbot_session_id', sessionId);
+            localStorage.setItem('inmobot_session_id', sessionId);
         }
     }, [sessionId]);
 
@@ -191,6 +191,7 @@ const ChatInterface = () => {
     const handleNewConversation = () => {
         setMessages([]);
         setSessionId(null);
+        localStorage.removeItem('inmobot_session_id');
         localStorage.removeItem('ecosbot_session_id');
         setError(null);
     };
@@ -202,8 +203,8 @@ const ChatInterface = () => {
                 <div className="chat-header">
                     <div className="chat-header-content">
                         <div className="chat-header-info">
-                            <h2>EcosBot</h2>
-                            <p className="chat-subtitle">Asistente SEO y Marketing</p>
+                            <h2>InmoBot AI</h2>
+                            <p className="chat-subtitle">Asesor Inmobiliario Inteligente</p>
                             <div className="chat-status">
                                 <span className="status-dot" />
                                 <span>En línea</span>
@@ -228,10 +229,10 @@ const ChatInterface = () => {
                         <div className="welcome-section">
                             <div className="welcome-content">
 
-                                <h3>Bienvenido a EcosBot</h3>
+                                <h3>Bienvenido a InmoBot AI</h3>
                                 <p>
-                                    Tu asistente personal para encontrar la propiedad perfecta en España.
-                                    Estoy aquí para ayudarte las 24 horas.
+                                    Tu asesor inmobiliario personal para encontrar la propiedad perfecta o inversión ideal en España.
+                                    Estoy aquí para ayudarte 24/7.
                                 </p>
                                 <div className="quick-actions-grid">
                                     {quickActions.map((item, index) => (

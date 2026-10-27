@@ -58,7 +58,7 @@ export const getLeadById = async (leadId) => {
 };
 
 /**
- * Obtiene todas las servicios SEO
+ * Obtiene todas las propiedades inmobiliarias
  * @returns {Promise<{total: number, properties: array}>}
  */
 export const getProperties = async () => {
@@ -67,6 +67,68 @@ export const getProperties = async () => {
         return response.data;
     } catch (error) {
         console.error('Error fetching properties:', error);
+        throw error;
+    }
+};
+
+/**
+ * Consulta el estado de conexión de WhatsApp (Evolution API)
+ * @returns {Promise<{ok: boolean, instancia: string, estado: string, esta_conectado: boolean, telefono?: string, nombre_perfil?: string}>}
+ */
+export const obtenerEstadoWhatsApp = async () => {
+    try {
+        const response = await api.get('/api/whatsapp/estado');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching WhatsApp status:', error);
+        throw error;
+    }
+};
+
+/**
+ * Obtiene el código QR en base64 para vincular WhatsApp
+ * @returns {Promise<{ok: boolean, codigo_qr_base64: string, codigo_emparejamiento?: string}>}
+ */
+export const obtenerQrWhatsApp = async () => {
+    try {
+        const response = await api.get('/api/whatsapp/qr');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching WhatsApp QR:', error);
+        throw error;
+    }
+};
+
+/**
+ * Configura la URL del webhook en Evolution API
+ * @param {string} urlWebhook
+ */
+export const configurarWebhookWhatsApp = async (urlWebhook) => {
+    try {
+        const response = await api.post('/api/whatsapp/configurar-webhook', {
+            webhook_url: urlWebhook
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting WhatsApp webhook:', error);
+        throw error;
+    }
+};
+
+/**
+ * Envía un mensaje manual de WhatsApp desde el panel (prueba o contacto)
+ * @param {string} numero
+ * @param {string} mensaje
+ */
+export const enviarMensajeWhatsAppPrueba = async (numero, mensaje) => {
+    try {
+        const response = await api.post('/api/whatsapp/enviar-mensaje', {
+            numero,
+            mensaje
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error sending test WhatsApp message:', error);
         throw error;
     }
 };

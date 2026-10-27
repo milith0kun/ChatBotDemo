@@ -26,6 +26,11 @@ VOICE_PROVIDER = os.getenv("VOICE_PROVIDER", "deepgram")  # "deepgram" o "openai
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
 
+# Evolution API (WhatsApp) Configuration
+EVOLUTION_API_URL = os.getenv("EVOLUTION_API_URL", "https://cgbacademyti-evolutionapi-b4df35-72-60-114-137.sslip.io").rstrip("/")
+EVOLUTION_API_KEY = os.getenv("EVOLUTION_API_KEY", "738D584F644E-4B09-97EF-F25CDC95596E")
+EVOLUTION_INSTANCE_NAME = os.getenv("EVOLUTION_INSTANCE_NAME", "Edmil Jampier Saire Bustamante")
+
 # CORS Configuration
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 

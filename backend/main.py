@@ -14,12 +14,20 @@ from modules.ai_agent import process_message
 from modules.lead_manager import get_all_leads, load_properties, get_lead_by_id, create_or_update_lead
 from modules.telegram_bot import send_telegram_message, extract_message_data, set_webhook, get_webhook_info
 from modules.voice_handler import transcribe_audio, synthesize_speech, adapt_text_for_voice
+from modules.whatsapp_bot import (
+    obtener_estado_whatsapp,
+    obtener_qr_whatsapp,
+    enviar_mensaje_whatsapp,
+    configurar_webhook_whatsapp,
+    obtener_info_webhook_whatsapp,
+    extraer_datos_mensaje_whatsapp,
+)
 
 # Inicializar FastAPI
 app = FastAPI(
-    title="EcosBot API",
-    description="API para el agente marketing digital con IA - Sistema Omnicanal",
-    version="1.0.0"
+    title="InmoBot AI API",
+    description="API para el agente inmobiliario inteligente con IA - Sistema Omnicanal",
+    version="2.0.0"
 )
 
 # Configurar CORS
@@ -31,6 +39,7 @@ app.add_middleware(
         "http://localhost:5173",
         "http://localhost:3000",
         "http://127.0.0.1:5173",
+        "*",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -42,6 +51,9 @@ sessions = {}
 
 # Almacén de conversaciones de Telegram
 telegram_conversations = {}
+
+# Almacén de conversaciones de WhatsApp
+whatsapp_conversations = {}
 
 # Almacén de conversaciones de voz
 voice_sessions = {}
@@ -85,6 +97,11 @@ class VoiceSynthesisRequest(BaseModel):
     speed: Optional[float] = 1.0
 
 
+class WhatsAppMessageRequest(BaseModel):
+    numero: str
+    mensaje: str
+
+
 # ==================== ENDPOINTS ====================
 
 @app.get("/")
@@ -92,9 +109,9 @@ async def root():
     """Estado de la API."""
     return {
         "status": "online",
-        "service": "EcosBot API",
-        "version": "1.0.0",
-        "channels": ["web", "telegram", "voice"]
+        "service": "InmoBot AI API",
+        "version": "2.0.0",
+        "channels": ["web", "whatsapp", "voice", "telegram"]
     }
 
 
@@ -372,6 +389,100 @@ async def get_telegram_webhook_info():
     return result
 
 
+# ==================== EVOLUTION API (WHATSAPP) ====================
+
+@app.get("/api/whatsapp/estado")
+async def whatsapp_estado():
+    """Consulta el estado de conexión de WhatsApp en tiempo real."""
+    return await obtener_estado_whatsapp()
+
+
+@app.get("/api/whatsapp/qr")
+async def whatsapp_qr():
+    """Obtiene el código QR en base64 y código de emparejamiento."""
+    return await obtener_qr_whatsapp()
+
+
+@app.post("/api/whatsapp/configurar-webhook")
+async def whatsapp_configurar_webhook(request: WebhookSetupRequest):
+    """Configura el webhook de Evolution API hacia la URL especificada."""
+    return await configurar_webhook_whatsapp(request.webhook_url)
+
+
+@app.get("/api/whatsapp/info-webhook")
+async def whatsapp_info_webhook():
+    """Consulta los datos del webhook actual en Evolution API."""
+    return await obtener_info_webhook_whatsapp()
+
+
+@app.post("/api/whatsapp/enviar-mensaje")
+async def whatsapp_enviar_mensaje(request: WhatsAppMessageRequest):
+    """Permite enviar un mensaje manual de WhatsApp desde el panel (prueba o contacto)."""
+    return await enviar_mensaje_whatsapp(request.numero, request.mensaje)
+
+
+@app.post("/api/whatsapp/webhook")
+async def whatsapp_webhook(request: Request):
+    """
+    Webhook receptor para Evolution API v2.
+    Procesa mensajes entrantes de clientes, ejecuta el agente inmobiliario IA y responde.
+    """
+    try:
+        datos = await request.json()
+        print(f"[WHATSAPP WEBHOOK] Evento recibido: {datos.get('event')}")
+
+        mensaje_datos = extraer_datos_mensaje_whatsapp(datos)
+        if not mensaje_datos:
+            # Mensaje propio, grupo o no procesable
+            return {"ok": True, "ignorado": True}
+
+        remitente_jid = mensaje_datos["remitente_jid"]
+        telefono = mensaje_datos["telefono"]
+        nombre = mensaje_datos["nombre"]
+        texto = mensaje_datos["texto"]
+
+        id_sesion = f"whatsapp_{telefono}"
+
+        if id_sesion not in whatsapp_conversations:
+            whatsapp_conversations[id_sesion] = []
+
+        historial = whatsapp_conversations[id_sesion]
+
+        # Procesar con el agente inmobiliario IA
+        respuesta_ia, historial_actualizado, datos_lead = await process_message(
+            message=texto,
+            conversation_history=historial,
+            channel="whatsapp",
+            session_id=id_sesion
+        )
+
+        whatsapp_conversations[id_sesion] = historial_actualizado
+
+        # Consolidar datos del lead inmobiliario
+        lead_combinado = datos_lead or {}
+        if not lead_combinado.get("phone"):
+            lead_combinado["phone"] = telefono
+        if nombre and not lead_combinado.get("name") and nombre != "Cliente WhatsApp":
+            lead_combinado["name"] = nombre
+
+        create_or_update_lead(
+            channel="whatsapp",
+            session_id=id_sesion,
+            lead_data=lead_combinado,
+            conversation_history=historial_actualizado
+        )
+
+        # Enviar respuesta automática por WhatsApp al cliente
+        resultado_envio = await enviar_mensaje_whatsapp(remitente_jid, respuesta_ia)
+        print(f"[WHATSAPP WEBHOOK] Respuesta enviada a {telefono}: {resultado_envio.get('ok')}")
+
+        return {"ok": True, "respuesta_enviada": resultado_envio.get("ok")}
+
+    except Exception as error_webhook:
+        print(f"[WHATSAPP WEBHOOK ERROR]: {error_webhook}")
+        return {"ok": False, "error": str(error_webhook)}
+
+
 # ==================== ENDPOINTS DE VOZ ====================
 
 @app.post("/api/voice/transcribe")
@@ -442,7 +553,7 @@ async def voice_transcribe(
             voice_sessions[session_id] = [
                 {
                     "role": "assistant",
-                    "content": "Hola, soy EcosBot. Dime en qué puedo ayudarte."
+                    "content": "Hola, soy InmoBot. ¿En qué propiedad o inversión puedo ayudarte?"
                 }
             ]
             print(f"[SESSION] Nueva sesión creada con saludo inicial: {session_id}")

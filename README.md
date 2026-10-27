@@ -1,244 +1,136 @@
-# 🏠 EcosBot AI - Agente SEO y Marketing con IA
+# 🏠 InmoBot AI - Asistente Inmobiliario Inteligente Omnicanal
 
-Sistema omnicanal de chatbot marketing digital potenciado por IA, con soporte para chat web, Telegram y voz.
+Sistema integral y comercial de inteligencia artificial para agencias inmobiliarias y promotoras de lujo, con atención omnicanal en tiempo real a través de **WhatsApp (Evolution API v2)**, **Llamadas de Voz en Vivo (OpenAI Realtime WebRTC)**, **Chat Web Interactivo**, **Telegram** y un **Panel CRM de Leads**.
 
-![Status](https://img.shields.io/badge/status-production-green)
+![Estado](https://img.shields.io/badge/estado-producción-emerald)
 ![Python](https://img.shields.io/badge/python-3.11-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-2.0-teal)
 ![React](https://img.shields.io/badge/react-18-61DAFB)
-![License](https://img.shields.io/badge/license-MIT-green)
+![WhatsApp](https://img.shields.io/badge/WhatsApp-Evolution_API_v2-25D366)
+![WebRTC](https://img.shields.io/badge/WebRTC-OpenAI_Realtime-8b5cf6)
 
-## 📋 Descripción
+---
 
-EcosBot AI es un asistente marketing digital inteligente que permite a clientes potenciales:
+## 🌟 Características Principales
 
-- 💬 Chatear con un agente de IA por **Web**, **Telegram** o **Voz**
-- 🎯 Ser cualificados de forma natural (sin formularios)
-- 🏡 Recibir recomendaciones de servicios SEO según sus necesidades
-- 📊 Captura automática de leads con clasificación inteligente
+- **WhatsApp Inteligente (Evolution API v2):** Vinculación directa por código QR o Pairing Code de la instancia oficial. Recepción y respuesta automática de consultas mediante webhook, calificando al cliente y agendando visitas.
+- **Llamadas por Voz en Tiempo Real (OpenAI Realtime WebRTC):** Conversaciones fluidas con latencia ultra baja, detección de voz del usuario (Server VAD), respuesta por voz humana e interrupción natural.
+- **Chat Web Interactivo:** Exploración del catálogo de propiedades (villas, áticos, apartamentos de lujo), filtros de presupuesto y captura conversacional de datos.
+- **Bot de Telegram:** Atención automatizada e inmediata a prospectos que prefieran este canal.
+- **Dashboard CRM Omnicanal:** Métricas de volumen por canal, filtrado por temperatura comercial (Caliente, Tibio, Frío), historial completo de mensajes y **exportación a CSV** con un solo clic.
+
+---
 
 ## 🛠️ Stack Tecnológico
 
 ### Backend
-| Tecnología | Versión | Uso |
-|------------|---------|-----|
-| Python | 3.11 | Runtime |
-| FastAPI | 0.109 | Framework web/API |
-| OpenAI GPT-4o | Latest | IA Conversacional |
-| OpenAI Whisper | Latest | Transcripción de voz (STT) |
-| OpenAI TTS | tts-1-hd | Síntesis de voz |
-| Deepgram | 3.5 | Alternativa STT/TTS |
-| httpx | 0.26 | Cliente HTTP async |
-| Pydantic | 2.5 | Validación de datos |
+| Tecnología | Versión | Propósito |
+|------------|---------|-----------|
+| Python | 3.11 | Entorno de ejecución |
+| FastAPI | 0.109 | Framework web y API REST |
+| OpenAI GPT-4o / Realtime | GA Schema | Agente conversacional y WebRTC de voz |
+| Evolution API v2 | 2.3.7 | Integración oficial con WhatsApp |
+| Uvicorn | 0.27 | Servidor ASGI de alto rendimiento |
+| httpx | 0.26 | Cliente HTTP asíncrono para webhooks y APIs |
 
 ### Frontend
-| Tecnología | Versión | Uso |
-|------------|---------|-----|
-| React | 18.2 | Framework UI |
-| Vite | 5.0 | Build tool |
-| Axios | 1.6 | Cliente HTTP |
-| React Router DOM | 6.21 | Enrutamiento |
-| react-markdown | 10.1 | Renderizado markdown |
+| Tecnología | Versión | Propósito |
+|------------|---------|-----------|
+| React | 18.2 | Biblioteca de interfaz de usuario |
+| Vite | 5.0 | Empaquetador y entorno de desarrollo ultra rápido |
+| WebRTC API | Estándar W3C | Streaming de audio bidireccional |
+| Axios | 1.6 | Conexión con endpoints de la API |
+| React Router DOM | 6.21 | Navegación entre Chat, Voz y Dashboard |
+
+---
 
 ## 📁 Estructura del Proyecto
 
 ```
 ChatBotDemo/
 ├── backend/
-│   ├── main.py              # Aplicación FastAPI
-│   ├── config.py            # Configuración y variables
-│   ├── requirements.txt     # Dependencias Python
-│   ├── modules/
-│   │   ├── ai_agent.py      # Lógica del agente IA
-│   │   ├── lead_manager.py  # Gestión de leads
-│   │   ├── voice_handler.py # Procesamiento de voz
-│   │   └── telegram_bot.py  # Integración Telegram
-│   └── data/
-│       ├── properties.json  # Catálogo de servicios SEO
-│       └── leads.json       # Leads capturados
-│
+│   ├── config.py                 # Variables de entorno y rutas base
+│   ├── main.py                   # API FastAPI y enrutamiento omnicanal
+│   ├── requirements.txt          # Dependencias Python
+│   ├── data/
+│   │   ├── properties.json       # Catálogo de inmuebles en España
+│   │   └── leads.json            # Base de datos de prospectos capturados
+│   └── modules/
+│       ├── ai_agent.py           # Agente IA inmobiliario y llamadas a funciones
+│       ├── lead_manager.py       # Puntuación, temperatura y CRM de leads
+│       ├── whatsapp_bot.py       # Conexión con Evolution API (QR, mensajes, webhook)
+│       ├── telegram_bot.py       # Manejador del bot de Telegram
+│       └── voice_handler.py      # Transcripción y síntesis de voz tradicional
 ├── frontend/
-│   ├── src/
-│   │   ├── App.jsx          # Router principal
-│   │   ├── components/
-│   │   │   ├── ChatInterface/   # Chat web
-│   │   │   ├── VoiceCall/       # Llamada por voz
-│   │   │   ├── Dashboard/       # Panel de leads
-│   │   │   └── Header/          # Navegación
-│   │   └── services/
-│   │       └── api.js       # Llamadas API
-│   └── package.json
-│
-└── README.md
+│   ├── index.html                # Entrada HTML con metadatos y tipografías
+│   ├── package.json              # Dependencias del cliente React
+│   └── src/
+│       ├── components/
+│       │   ├── Header/           # Barra superior con estado de WhatsApp
+│       │   ├── ChatInterface/    # Chat de texto web inmobiliario
+│       │   ├── VoiceCall/        # Llamada en vivo WebRTC con Realtime API
+│       │   ├── Dashboard/        # Panel de métricas y CRM omnicanal
+│       │   └── WhatsAppModal/    # Modal para escaneo de QR y prueba de WhatsApp
+│       ├── services/
+│       │   └── api.js            # Cliente HTTP para backend y WhatsApp
+│       └── hooks/
+│           └── useWebRTC.js      # Hook para conexión WebRTC con OpenAI
 ```
-
-## 🚀 Instalación y Uso
-
-### Requisitos Previos
-- Python 3.11+
-- Node.js 18+
-- API Key de OpenAI
-- (Opcional) API Key de Deepgram
-- (Opcional) Token de Bot de Telegram
-
-### 1. Configurar Backend
-
-```bash
-cd backend
-
-# Crear entorno virtual
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# o: venv\Scripts\activate  # Windows
-
-# Instalar dependencias
-pip install -r requirements.txt
-
-# Configurar variables de entorno
-cp .env.example .env
-# Editar .env con tus API keys
-```
-
-**Variables de entorno requeridas (.env):**
-```bash
-OPENAI_API_KEY=sk-...
-DEEPGRAM_API_KEY=...        # Opcional
-TELEGRAM_BOT_TOKEN=...      # Opcional
-VOICE_PROVIDER=openai       # o "deepgram"
-FRONTEND_URL=http://localhost:5173
-PORT=8000
-```
-
-### 2. Configurar Frontend
-
-```bash
-cd frontend
-
-# Instalar dependencias
-npm install
-
-# Configurar URL del backend
-echo "VITE_API_URL=http://localhost:8000" > .env
-```
-
-### 3. Ejecutar en Desarrollo
-
-```bash
-# Terminal 1 - Backend
-cd backend
-python main.py
-# Servidor en http://localhost:8000
-
-# Terminal 2 - Frontend
-cd frontend
-npm run dev
-# Aplicación en http://localhost:5173
-```
-
-## 📡 API Endpoints
-
-### Chat y Voz
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/api/chat` | Procesar mensaje de chat web |
-| POST | `/api/voice/transcribe` | Transcribir audio y responder |
-| POST | `/api/voice/synthesize` | Convertir texto a audio |
-| POST | `/api/realtime/session` | Crear sesión WebRTC (OpenAI Realtime) |
-
-### Datos
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/leads` | Listar todos los leads |
-| GET | `/api/leads/{id}` | Obtener lead específico |
-| GET | `/api/properties` | Listar servicios SEO |
-
-### Telegram
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/webhook/telegram` | Webhook de Telegram |
-| POST | `/api/telegram/setup-webhook` | Configurar webhook |
-| GET | `/api/telegram/webhook-info` | Info del webhook |
-
-### Sistema
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/` | Estado de la API |
-| GET | `/api/health` | Health check |
-
-## 🧪 Guía de Pruebas
-
-### Escenario 1: Ver Catálogo
-```
-Usuario: "Hola, quiero ver qué servicios SEO tienen"
-Bot: [Muestra catálogo completo con precios]
-```
-
-### Escenario 2: Búsqueda Específica
-```
-Usuario: "Busco departamento en San Isidro, tengo 260 mil dólares"
-Bot: [Recomienda servicios SEO que encajen]
-```
-
-### Escenario 3: Captura de Lead
-```
-Usuario: "Me interesa, soy Juan Pérez, mi teléfono es 999888777"
-Bot: [Confirma y guarda datos]
-→ Verificar en Dashboard: Lead aparece como "🔥 Caliente"
-```
-
-## 📊 Sistema de Clasificación de Leads
-
-| Score | Temperatura | Criterio |
-|-------|-------------|----------|
-| 0-30 | ❄️ Frío | Solo exploración |
-| 31-60 | 🌤️ Tibio | Interés sin urgencia |
-| 61-100 | 🔥 Caliente | Listo para comprar |
-
-**Puntuación automática:**
-- Nombre: +25 pts
-- Teléfono: +30 pts
-- Email: +15 pts
-- Presupuesto: +10 pts
-- Quiere visita: +20 pts
-
-## 🚀 Despliegue en Producción
-
-### Docker
-
-```bash
-# Frontend
-cd frontend
-docker build --build-arg VITE_API_URL=https://tu-api.com -t ecosbot-frontend .
-docker run -p 80:80 ecosbot-frontend
-
-# Backend
-cd backend
-docker build -t ecosbot-backend .
-docker run -p 8000:8000 --env-file .env ecosbot-backend
-```
-
-### Variables de Producción
-
-**Frontend (.env.production):**
-```bash
-VITE_API_URL=https://tu-api.com
-```
-
-**Backend (.env):**
-```bash
-OPENAI_API_KEY=sk-...
-FRONTEND_URL=https://tu-frontend.com
-```
-
-## 🔗 URLs de Demo
-
-- **Chat Web:** https://chat-demo-web.ecosdelseo.com
-- **Dashboard:** https://chat-demo-web.ecosdelseo.com/dashboard
-- **Bot Telegram:** https://t.me/EdmilSairebot
-
-## 📝 Licencia
-
-MIT License - Ver archivo LICENSE para más detalles.
 
 ---
 
-**Desarrollado con ❤️ usando IA**
+## ⚙️ Variables de Entorno
+
+### Backend (`backend/.env`)
+```ini
+OPENAI_API_KEY=sk-proj-...
+EVOLUTION_API_URL=https://cgbacademyti-evolutionapi-b4df35-72-60-114-137.sslip.io
+EVOLUTION_API_KEY=738D584F644E-4B09-97EF-F25CDC95596E
+EVOLUTION_INSTANCE_NAME=Edmil Jampier Saire Bustamante
+TELEGRAM_BOT_TOKEN=...
+FRONTEND_URL=https://chat-demo-web.ecosdelseo.com
+PORT=8001
+```
+
+### Frontend (`frontend/.env.production` / Dokploy)
+```ini
+VITE_API_URL=https://api-chat-demo.ecosdelseo.com
+```
+
+---
+
+## 🚀 Puesta en Marcha Local
+
+### 1. Iniciar Backend
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate   # En Windows
+pip install -r requirements.txt
+python -m uvicorn main:app --host 127.0.0.1 --port 8001 --reload
+```
+
+### 2. Iniciar Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+El panel estará disponible en `http://localhost:5173`.
+
+---
+
+## 📲 Flujo de Conexión de WhatsApp (Evolution API)
+
+1. En el Header o en el Dashboard, haz clic en **WhatsApp** / **Conectar WhatsApp**.
+2. Se abrirá el modal de vinculación mostrando el código QR en tiempo real generado por Evolution API.
+3. Abre WhatsApp en tu dispositivo móvil > **Dispositivos vinculados** > **Vincular dispositivo**.
+4. Escanea el código QR. El sistema detectará la sesión automáticamente y cambiará el estado a **WhatsApp Conectado**.
+5. Desde el modal puedes enviar un mensaje de prueba o configurar el webhook hacia la URL de producción.
+
+---
+
+## 📄 Licencia
+
+Este proyecto está bajo licencia MIT. Desarrollado para demostraciones comerciales inmobiliarias de alto impacto.
