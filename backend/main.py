@@ -148,7 +148,6 @@ async def create_realtime_session():
                         "session": {
                             "type": "realtime",
                             "model": model_name,
-                            "voice": "shimmer",  # Voz femenina natural en español
                             "instructions": """Eres un asistente inmobiliario virtual profesional y amigable.
 
 REGLAS IMPORTANTES:
@@ -167,11 +166,18 @@ REGLAS IMPORTANTES:
 SALUDO INICIAL:
 Cuando el usuario inicie la llamada, saluda brevemente: "Hola, soy tu asistente inmobiliario. ¿En qué propiedad o zona estás interesado?"
 """,
-                            "turn_detection": {
-                                "type": "server_vad",
-                                "threshold": 0.5,
-                                "prefix_padding_ms": 300,
-                                "silence_duration_ms": 500
+                            "audio": {
+                                "output": {
+                                    "voice": "shimmer"
+                                },
+                                "input": {
+                                    "turn_detection": {
+                                        "type": "server_vad",
+                                        "threshold": 0.5,
+                                        "prefix_padding_ms": 300,
+                                        "silence_duration_ms": 500
+                                    }
+                                }
                             }
                         }
                     },
